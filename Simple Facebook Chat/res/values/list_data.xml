@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="people_names">
+        <item>Ondrej Danko</item>
+        <item>Martin Hanisko</item>
+        <item>Erik Virag</item>
+        <item>Martin Slavkovsky</item>
+    </string-array>
+</resources>
