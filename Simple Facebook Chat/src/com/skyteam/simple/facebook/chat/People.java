@@ -9,6 +9,7 @@ public class People extends ListActivity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_people);
         
         String[] people_names = getResources().getStringArray(R.array.people_names);        
         PeopleArrayAdapter adapter = new PeopleArrayAdapter(this, people_names);    
@@ -21,4 +22,5 @@ public class People extends ListActivity {
         getMenuInflater().inflate(R.menu.activity_people, menu);
         return true;
     }
+    
 }
