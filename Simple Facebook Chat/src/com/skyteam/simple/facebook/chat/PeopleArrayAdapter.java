@@ -11,6 +11,10 @@ public class PeopleArrayAdapter extends ArrayAdapter<String> {
 	private final Context context;
 	private final String[] values;
 	
+	static class ViewHolder {
+		public TextView text;
+	}
+	
 	public PeopleArrayAdapter(Context context, String[] values) {
 		super(context, R.layout.list_item, values);
 		this.context = context;
@@ -18,11 +22,20 @@ public class PeopleArrayAdapter extends ArrayAdapter<String> {
 	}
 	
 	public View getView(int position, View convertView, ViewGroup parent) {
-		LayoutInflater inflater = (LayoutInflater) context
-				.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-		View rowView = inflater.inflate(R.layout.list_item, parent, false);
-		TextView textview = (TextView) rowView.findViewById(R.id.label);
-		textview.setText(values[position]);
+		View rowView = convertView;
+		if (rowView == null) {
+			//LayoutInflater inflater = context.getLayoutInflater();
+			LayoutInflater inflater = (LayoutInflater) context
+					.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+			rowView = inflater.inflate(R.layout.list_item, null);
+			ViewHolder viewHolder = new ViewHolder();
+			viewHolder.text = (TextView) rowView.findViewById(R.id.label);
+			rowView.setTag(viewHolder);
+		}
+		
+		ViewHolder holder = (ViewHolder) rowView.getTag();
+		String s = values[position];
+		holder.text.setText(s);
 		
 		return rowView;
 	}
