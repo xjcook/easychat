@@ -21,6 +21,7 @@ public class PeopleArrayAdapter extends ArrayAdapter<String> {
 		this.values = values;
 	}
 	
+	@Override
 	public View getView(int position, View convertView, ViewGroup parent) {
 		View rowView = convertView;
 		if (rowView == null) {
