@@ -1,4 +1,4 @@
-package com.skyteam.simple.facebook.chat;
+package com.skyteam.easy.chat;
 
 import java.util.ArrayList;
 import java.util.Collection;

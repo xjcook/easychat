@@ -1,4 +1,4 @@
-package com.skyteam.simple.facebook.chat;
+package com.skyteam.easy.chat;
 
 import android.content.Context;
 import android.view.LayoutInflater;
@@ -6,6 +6,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.TextView;
+import com.skyteam.easy.chat.R;
 
 public class PeopleArrayAdapter extends ArrayAdapter<String> {
 	private final Context context;

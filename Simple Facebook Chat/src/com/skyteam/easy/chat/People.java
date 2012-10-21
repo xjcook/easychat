@@ -1,4 +1,4 @@
-package com.skyteam.simple.facebook.chat;
+package com.skyteam.easy.chat;
 
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -8,6 +8,7 @@ import android.view.Menu;
 import android.view.View;
 import android.widget.ListView;
 import android.widget.Toast;
+import com.skyteam.easy.chat.R;
 
 public class People extends ListActivity {
 	public String[] peopleNames;
