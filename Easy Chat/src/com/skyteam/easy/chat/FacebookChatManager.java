@@ -18,7 +18,7 @@ public class FacebookChatManager {
 	private XMPPConnection connection;
 	private final String SERVER = "chat.facebook.com";
 	private final Integer PORT = 5222;
-	private final String apiKey = "";
+	private final String apiKey = "424998287563509";
 	private final String sessionKey = "";
 	private final String sessionSecret = "";
 	
@@ -46,7 +46,7 @@ public class FacebookChatManager {
 		connection.disconnect();
 	}
 	
-	public boolean login(String user, String pass) {
+	public boolean login() {
 		try {
 			connection.login(apiKey + "|" + sessionKey, sessionSecret, "Application");
 			return true;
