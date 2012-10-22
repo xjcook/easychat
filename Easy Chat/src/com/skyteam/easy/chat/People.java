@@ -1,5 +1,9 @@
 package com.skyteam.easy.chat;
 
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.net.MalformedURLException;
+
 import android.app.ListActivity;
 import android.content.Context;
 import android.content.Intent;
@@ -7,23 +11,25 @@ import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.ListView;
 import android.widget.Toast;
 
 import com.facebook.android.AsyncFacebookRunner;
+import com.facebook.android.AsyncFacebookRunner.RequestListener;
 import com.facebook.android.DialogError;
 import com.facebook.android.Facebook;
 import com.facebook.android.Facebook.DialogListener;
 import com.facebook.android.FacebookError;
 
 public class People extends ListActivity {
-	/* TODO Add logout method */
 	
-	Facebook facebook = new Facebook("424998287563509");
-    AsyncFacebookRunner mAsyncRunner = new AsyncFacebookRunner(facebook);
-    
+    private final String appID = "424998287563509";
     private SharedPreferences mPrefs;
+	
+	Facebook facebook = new Facebook(appID);
+    AsyncFacebookRunner mAsyncRunner = new AsyncFacebookRunner(facebook);
 	
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -64,17 +70,49 @@ public class People extends ListActivity {
         /* TODO Adjust FacebookChatManager to properly support SASL */
         //new FacebookConnectTask().execute(this);
     }
-    
-    @Override
-    public void onResume() {
-    	super.onResume();
-        facebook.extendAccessTokenIfNeeded(this, null);
-    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.activity_people, menu);
         return true;
+    }
+    
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+    	// Handle item selection
+    	switch (item.getItemId()) {
+    	case R.id.logout:
+    		mAsyncRunner.logout(this, new RequestListener() {
+
+				@Override
+				public void onComplete(String response, Object state) {}
+
+				@Override
+				public void onIOException(IOException e, Object state) {}
+
+				@Override
+				public void onFileNotFoundException(FileNotFoundException e, Object state) {}
+
+				@Override
+				public void onMalformedURLException(MalformedURLException e, Object state) {}
+
+				@Override
+				public void onFacebookError(FacebookError e, Object state) {}
+
+			});
+    		return true;
+    	case R.id.menu_settings:
+    		/* TODO What happens if user click on settings button */
+    		return true;
+    	default:
+    		return super.onOptionsItemSelected(item);
+    	}
+    }
+    
+    @Override
+    public void onResume() {
+    	super.onResume();
+        facebook.extendAccessTokenIfNeeded(this, null);
     }
     
     @Override

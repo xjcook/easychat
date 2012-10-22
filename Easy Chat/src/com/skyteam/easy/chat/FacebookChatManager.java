@@ -38,8 +38,8 @@ public class FacebookChatManager {
 		} catch (XMPPException e) {
 			e.printStackTrace();
 			connection.disconnect();
-			return false;
 		}
+		return false;
 	}
 	
 	public void disconnect() {
@@ -53,8 +53,8 @@ public class FacebookChatManager {
 		} catch (XMPPException e) {
 			e.printStackTrace();
 			connection.disconnect();
-			return false;
-		}
+		}	
+		return false;
 	}
 	
 	public String[] getPeople() {
