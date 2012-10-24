@@ -10,51 +10,48 @@ import org.jivesoftware.smack.RosterEntry;
 import org.jivesoftware.smack.SASLAuthentication;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
-import org.jivesoftware.smack.SmackAndroid;
 
-import android.content.Context;
+import android.util.Log;
 
 public class FacebookChatManager {
-	private XMPPConnection connection;
-	private final String SERVER = "chat.facebook.com";
-	private final Integer PORT = 5222;
-	private final String apiKey = "424998287563509";
-	private final String sessionKey = "";
-	private final String sessionSecret = "";
 	
-	public FacebookChatManager(Context context) {
-		SmackAndroid.init(context);
+	private static final String TAG = "FacebookChatManager";
+	private static final String SERVER = "chat.facebook.com";
+	private static final Integer PORT = 5222;
+	private boolean isConnected = false;
+	private XMPPConnection connection;
+	
+	public FacebookChatManager() {
 		ConnectionConfiguration config = new ConnectionConfiguration(SERVER, PORT);
+		config.setDebuggerEnabled(true);
 		config.setSASLAuthenticationEnabled(true);
+		config.setSecurityMode(ConnectionConfiguration.SecurityMode.enabled);
 		connection = new XMPPConnection(config);
 	}
 	
-	public boolean connect() {
+	public boolean login(String appID, String accessToken) {
+		// TODO Does not work with Android 4.x
 		try {
 			SASLAuthentication.registerSASLMechanism("X-FACEBOOK-PLATFORM", SASLXFacebookPlatformMechanism.class);
 		    SASLAuthentication.supportSASLMechanism("X-FACEBOOK-PLATFORM", 0);
-			connection.connect();
+		    connection.connect();
+		    connection.login(appID, accessToken, "Easy Chat");
+		    isConnected = true;
 			return true;
 		} catch (XMPPException e) {
-			e.printStackTrace();
+			Log.e(TAG, Log.getStackTraceString(e));
 			connection.disconnect();
-		}
+			isConnected = false;
+		}	
 		return false;
 	}
 	
-	public void disconnect() {
+	public void logout() {
 		connection.disconnect();
 	}
 	
-	public boolean login() {
-		try {
-			connection.login(apiKey + "|" + sessionKey, sessionSecret, "Application");
-			return true;
-		} catch (XMPPException e) {
-			e.printStackTrace();
-			connection.disconnect();
-		}	
-		return false;
+	public boolean isConnected() {
+		return this.isConnected;
 	}
 	
 	public String[] getPeople() {
@@ -63,13 +60,13 @@ public class FacebookChatManager {
 			
 			Roster roster = connection.getRoster();
 			Collection<RosterEntry> entries = roster.getEntries();
-			for (RosterEntry entry : entries) {
+			
+			for (RosterEntry entry : entries)
 			    people.add(entry.toString());
-			}
 			
 			return people.toArray(new String[people.size()]);
 		} else {
-			return new String[0];
+			return new String[]{};
 		}
 	}
 }

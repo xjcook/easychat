@@ -4,12 +4,15 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.MalformedURLException;
 
+import org.jivesoftware.smack.SmackAndroid;
+
 import android.app.ListActivity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -25,16 +28,18 @@ import com.facebook.android.FacebookError;
 
 public class People extends ListActivity {
 	
-    private final String appID = "424998287563509";
-    private SharedPreferences mPrefs;
-	
-	Facebook facebook = new Facebook(appID);
-    AsyncFacebookRunner mAsyncRunner = new AsyncFacebookRunner(facebook);
+	private static final String TAG = "People";	
+    private static final String appID = "424998287563509";
+    private SharedPreferences mPrefs;	
+	private Facebook facebook = new Facebook(appID);
+    private AsyncFacebookRunner mAsyncRunner = new AsyncFacebookRunner(facebook);
+	private FacebookChatManager fbChat = new FacebookChatManager();
 	
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_people);
+		SmackAndroid.init(this);
         
         // Get existing access_token if any
         mPrefs = getPreferences(MODE_PRIVATE);
@@ -67,10 +72,67 @@ public class People extends ListActivity {
 	        });
         }
         
-        /* TODO Adjust FacebookChatManager to properly support SASL */
-        //new FacebookConnectTask().execute(this);
+        // Connect to Facebook Chat
+        Thread fbThread = new Thread(new FacebookConnect());
+        fbThread.setName("FacebookConnect");
+        fbThread.start();
+        
+        // TODO Get People
+        /*String[] names = fbChat.getPeople();
+		PeopleArrayAdapter adapter = new PeopleArrayAdapter(this, names);
+		setListAdapter(adapter);*/
     }
-
+    
+    /* Connect to Facebook Chat by XMPP */
+    private class FacebookConnect implements Runnable {
+    	
+		@Override
+		public void run() {
+			Log.v(TAG, "Session: " + facebook.isSessionValid());
+			try {
+				while (true) {
+					if (! facebook.isSessionValid()) {
+						Log.v(TAG, "Sleeping...");
+						Thread.sleep(1000);
+					} else {
+						if (fbChat.login(facebook.getAppId(), facebook.getAccessToken())) {
+							Log.v(TAG, "Connected !!!");
+						} else {
+							Log.v(TAG, "Not connected !!!");
+						}
+						break;
+					}
+				}
+			} catch (InterruptedException e) {
+				Log.e(TAG, Log.getStackTraceString(e));
+			}			
+		}
+    	
+    }
+    
+    @Override
+    public void onResume() {
+    	super.onResume();
+        facebook.extendAccessTokenIfNeeded(this, null);
+    }
+    
+    @Override
+    public void onPause() {
+    	super.onPause();
+    }
+    
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        facebook.authorizeCallback(requestCode, resultCode, data);
+    }
+    
+    @Override
+    protected void onListItemClick(ListView l, View v, int position, long id) {
+    	String item = (String) getListAdapter().getItem(position);
+    	Toast.makeText(this, item + " selected", Toast.LENGTH_LONG).show();
+    }
+    
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.activity_people, menu);
@@ -100,59 +162,14 @@ public class People extends ListActivity {
 				public void onFacebookError(FacebookError e, Object state) {}
 
 			});
+    		Log.v(TAG, "Session: " + facebook.isSessionValid());
     		return true;
     	case R.id.menu_settings:
     		/* TODO What happens if user click on settings button */
-    		return true;
+    		return super.onOptionsItemSelected(item);
     	default:
     		return super.onOptionsItemSelected(item);
     	}
-    }
-    
-    @Override
-    public void onResume() {
-    	super.onResume();
-        facebook.extendAccessTokenIfNeeded(this, null);
-    }
-    
-    @Override
-    protected void onListItemClick(ListView l, View v, int position, long id) {
-    	String item = (String) getListAdapter().getItem(position);
-    	Toast.makeText(this, item + " selected", Toast.LENGTH_LONG).show();
-    }
-    
-    @Override
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-
-        facebook.authorizeCallback(requestCode, resultCode, data);
-    }
-    
-    /* AsyncTask to manage facebook xmpp connection in own thread */
-    private class FacebookConnectTask extends AsyncTask<Context, Void, PeopleArrayAdapter> {
-
-		@Override
-		protected PeopleArrayAdapter doInBackground(Context... contexts) {
-			for (Context context : contexts) {
-				FacebookChatManager fbChat = new FacebookChatManager(context);
-		        if (fbChat.connect()) {
-		        	if (fbChat.login()) {
-		        		String[] names = fbChat.getPeople();
-		        		PeopleArrayAdapter adapter = new PeopleArrayAdapter(context, names);
-		        		return adapter;
-		        	}
-		        }
-			}
-			
-			return null;
-		}
-		
-		@Override
-		protected void onPostExecute(PeopleArrayAdapter adapter) {
-			if (adapter != null)
-				setListAdapter(adapter);		
-		}
-    	
     }
     
 }
