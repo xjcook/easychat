@@ -30,7 +30,6 @@ public class FacebookChatManager {
 	}
 	
 	public boolean login(String appID, String accessToken) {
-		// TODO Does not work with Android 4.x
 		try {
 			SASLAuthentication.registerSASLMechanism("X-FACEBOOK-PLATFORM", SASLXFacebookPlatformMechanism.class);
 		    SASLAuthentication.supportSASLMechanism("X-FACEBOOK-PLATFORM", 0);

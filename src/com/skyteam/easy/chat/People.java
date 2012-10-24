@@ -7,10 +7,8 @@ import java.net.MalformedURLException;
 import org.jivesoftware.smack.SmackAndroid;
 
 import android.app.ListActivity;
-import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
@@ -30,16 +28,20 @@ public class People extends ListActivity {
 	
 	private static final String TAG = "People";	
     private static final String appID = "424998287563509";
+	private Facebook facebook;
+    private AsyncFacebookRunner mAsyncRunner;
     private SharedPreferences mPrefs;	
-	private Facebook facebook = new Facebook(appID);
-    private AsyncFacebookRunner mAsyncRunner = new AsyncFacebookRunner(facebook);
-	private FacebookChatManager fbChat = new FacebookChatManager();
+	private FacebookChatManager fbChat;
 	
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_people);
-		SmackAndroid.init(this);
+		SmackAndroid.init(this);		
+		
+		facebook = new Facebook(appID);
+		mAsyncRunner = new AsyncFacebookRunner(facebook);
+		fbChat = new FacebookChatManager();
         
         // Get existing access_token if any
         mPrefs = getPreferences(MODE_PRIVATE);
@@ -51,6 +53,7 @@ public class People extends ListActivity {
         	facebook.setAccessExpires(expires);
         
         // Only call authorize if the access_token has expired
+        Log.v(TAG, "Session: " + facebook.isSessionValid());
         if (! facebook.isSessionValid()) {
 	        facebook.authorize(this, new String[] {"xmpp_login"}, new DialogListener() {
 	            @Override
@@ -95,7 +98,7 @@ public class People extends ListActivity {
 						Log.v(TAG, "Sleeping...");
 						Thread.sleep(1000);
 					} else {
-						if (fbChat.login(facebook.getAppId(), facebook.getAccessToken())) {
+						if (fbChat.login(appID, facebook.getAccessToken())) {
 							Log.v(TAG, "Connected !!!");
 						} else {
 							Log.v(TAG, "Not connected !!!");
@@ -144,26 +147,34 @@ public class People extends ListActivity {
     	// Handle item selection
     	switch (item.getItemId()) {
     	case R.id.logout:
-    		mAsyncRunner.logout(this, new RequestListener() {
-
-				@Override
-				public void onComplete(String response, Object state) {}
-
-				@Override
-				public void onIOException(IOException e, Object state) {}
-
-				@Override
-				public void onFileNotFoundException(FileNotFoundException e, Object state) {}
-
-				@Override
-				public void onMalformedURLException(MalformedURLException e, Object state) {}
-
-				@Override
-				public void onFacebookError(FacebookError e, Object state) {}
-
+    		// Facebook logout
+			mAsyncRunner.logout(this, new RequestListener() {
+				  @Override
+				  public void onComplete(String response, Object state) {}
+				  
+				  @Override
+				  public void onIOException(IOException e, Object state) {}
+				  
+				  @Override
+				  public void onFileNotFoundException(FileNotFoundException e,
+				        Object state) {}
+				  
+				  @Override
+				  public void onMalformedURLException(MalformedURLException e,
+				        Object state) {}
+				  
+				  @Override
+				  public void onFacebookError(FacebookError e, Object state) {}
 			});
-    		Log.v(TAG, "Session: " + facebook.isSessionValid());
-    		return true;
+		
+			// Invalidate token in shared preferences
+			SharedPreferences.Editor editor = mPrefs.edit();
+            editor.putString("access_token", null);
+            editor.putLong("access_expires", 0);
+            editor.commit();
+			
+		    Log.v(TAG, "Session: " + facebook.isSessionValid());
+			return true;
     	case R.id.menu_settings:
     		/* TODO What happens if user click on settings button */
     		return super.onOptionsItemSelected(item);
