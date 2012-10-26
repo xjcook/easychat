@@ -3,7 +3,7 @@
     <string name="app_name">Easy Chat</string>
     <string name="title_activity_people">People</string>
     <string name="menu_settings">Settings</string>
-    <string name="login">Log In</string>
-    <string name="logout">Log Out</string>
+    <string name="menu_login">Log In</string>
+    <string name="menu_logout">Log Out</string>
 
 </resources>

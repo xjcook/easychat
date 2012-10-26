@@ -7,7 +7,7 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.TextView;
 
-public class PeopleArrayAdapter extends ArrayAdapter<String> {
+public class PeopleAdapter extends ArrayAdapter<String> {
 	private final Context context;
 	private final String[] values;
 	
@@ -15,7 +15,7 @@ public class PeopleArrayAdapter extends ArrayAdapter<String> {
 		public TextView text;
 	}
 	
-	public PeopleArrayAdapter(Context context, String[] values) {
+	public PeopleAdapter(Context context, String[] values) {
 		super(context, R.layout.list_item, values);
 		this.context = context;
 		this.values = values;

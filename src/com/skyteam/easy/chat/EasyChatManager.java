@@ -13,7 +13,7 @@ import org.jivesoftware.smack.XMPPException;
 
 import android.util.Log;
 
-public class FacebookChatManager {
+public class EasyChatManager {
 	
 	private static final boolean DEBUG = false;
 	private static final String TAG = "FacebookChatManager";
@@ -21,7 +21,7 @@ public class FacebookChatManager {
 	private static final Integer PORT = 5222;
 	private XMPPConnection connection;
 	
-	public FacebookChatManager() {
+	public EasyChatManager() {
 		ConnectionConfiguration config = new ConnectionConfiguration(SERVER, PORT);
 		config.setDebuggerEnabled(DEBUG);
 		config.setSASLAuthenticationEnabled(true);
