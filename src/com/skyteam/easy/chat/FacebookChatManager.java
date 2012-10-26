@@ -15,15 +15,15 @@ import android.util.Log;
 
 public class FacebookChatManager {
 	
+	private static final boolean DEBUG = false;
 	private static final String TAG = "FacebookChatManager";
 	private static final String SERVER = "chat.facebook.com";
 	private static final Integer PORT = 5222;
-	private boolean isConnected = false;
 	private XMPPConnection connection;
 	
 	public FacebookChatManager() {
 		ConnectionConfiguration config = new ConnectionConfiguration(SERVER, PORT);
-		config.setDebuggerEnabled(true);
+		config.setDebuggerEnabled(DEBUG);
 		config.setSASLAuthenticationEnabled(true);
 		config.setSecurityMode(ConnectionConfiguration.SecurityMode.enabled);
 		connection = new XMPPConnection(config);
@@ -33,14 +33,13 @@ public class FacebookChatManager {
 		try {
 			SASLAuthentication.registerSASLMechanism("X-FACEBOOK-PLATFORM", SASLXFacebookPlatformMechanism.class);
 		    SASLAuthentication.supportSASLMechanism("X-FACEBOOK-PLATFORM", 0);
-		    connection.connect();
-		    connection.login(appID, accessToken, "Easy Chat");
-		    isConnected = true;
+		    if (! connection.isConnected())
+		    	connection.connect();
+		    connection.login(appID, accessToken, "EasyChat");
 			return true;
 		} catch (XMPPException e) {
 			Log.e(TAG, Log.getStackTraceString(e));
 			connection.disconnect();
-			isConnected = false;
 		}	
 		return false;
 	}
@@ -49,8 +48,8 @@ public class FacebookChatManager {
 		connection.disconnect();
 	}
 	
-	public boolean isConnected() {
-		return this.isConnected;
+	public boolean isAuthenticated() {
+		return connection.isAuthenticated();
 	}
 	
 	public String[] getPeople() {
@@ -61,11 +60,11 @@ public class FacebookChatManager {
 			Collection<RosterEntry> entries = roster.getEntries();
 			
 			for (RosterEntry entry : entries)
-			    people.add(entry.toString());
+			    people.add(entry.getName());
 			
 			return people.toArray(new String[people.size()]);
 		} else {
-			return new String[]{};
+			return null;
 		}
 	}
 }
