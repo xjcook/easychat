@@ -8,55 +8,59 @@ import org.jivesoftware.smack.ConnectionConfiguration;
 import org.jivesoftware.smack.Roster;
 import org.jivesoftware.smack.RosterEntry;
 import org.jivesoftware.smack.SASLAuthentication;
+import org.jivesoftware.smack.SmackAndroid;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
 
+import android.content.Context;
 import android.util.Log;
 
 public class EasyChatManager {
 	
 	private static final boolean DEBUG = false;
-	private static final String TAG = "FacebookChatManager";
+	private static final String TAG = "EasyChatManager";
 	private static final String SERVER = "chat.facebook.com";
 	private static final Integer PORT = 5222;
-	private XMPPConnection connection;
+	private XMPPConnection xmpp;
 	
-	public EasyChatManager() {
+	public EasyChatManager(Context context) {
+		SmackAndroid.init(context);
 		ConnectionConfiguration config = new ConnectionConfiguration(SERVER, PORT);
 		config.setDebuggerEnabled(DEBUG);
 		config.setSASLAuthenticationEnabled(true);
 		config.setSecurityMode(ConnectionConfiguration.SecurityMode.enabled);
-		connection = new XMPPConnection(config);
+		xmpp = new XMPPConnection(config);
 	}
 	
 	public boolean login(String appID, String accessToken) {
 		try {
 			SASLAuthentication.registerSASLMechanism("X-FACEBOOK-PLATFORM", SASLXFacebookPlatformMechanism.class);
 		    SASLAuthentication.supportSASLMechanism("X-FACEBOOK-PLATFORM", 0);
-		    if (! connection.isConnected())
-		    	connection.connect();
-		    connection.login(appID, accessToken, "EasyChat");
+		    if (! xmpp.isConnected())
+		    	xmpp.connect();
+		    xmpp.login(appID, accessToken, "EasyChat");
 			return true;
 		} catch (XMPPException e) {
 			Log.e(TAG, Log.getStackTraceString(e));
-			connection.disconnect();
+			xmpp.disconnect();
 		}	
 		return false;
 	}
 	
 	public void logout() {
-		connection.disconnect();
+		xmpp.disconnect();
 	}
 	
 	public boolean isAuthenticated() {
-		return connection.isAuthenticated();
+		return xmpp.isAuthenticated();
 	}
 	
 	public String[] getPeople() {
-		if (connection.isAuthenticated()) {
+		// TODO Need to be faster
+		if (xmpp.isAuthenticated()) {
 			List<String> people = new ArrayList<String>();
 			
-			Roster roster = connection.getRoster();
+			Roster roster = xmpp.getRoster();
 			Collection<RosterEntry> entries = roster.getEntries();
 			
 			for (RosterEntry entry : entries)

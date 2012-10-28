@@ -3,8 +3,7 @@ package com.skyteam.easy.chat;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.MalformedURLException;
-
-import org.jivesoftware.smack.SmackAndroid;
+import java.util.Date;
 
 import android.content.Context;
 import android.content.Intent;
@@ -22,32 +21,32 @@ import com.facebook.android.DialogError;
 import com.facebook.android.Facebook;
 import com.facebook.android.Facebook.DialogListener;
 import com.facebook.android.FacebookError;
+import com.google.gson.Gson;
 
 public class EasyChatActivity extends FragmentActivity {
 	
 	private static final String TAG = "EasyChatActivity";	
     private static final String appID = "424998287563509";
-    private static final String[] PERMISSIONS = {"xmpp_login"};
+    private static final String[] PERMISSIONS = {"xmpp_login", "read_mailbox"};
     private Context context;
 	private Facebook facebook;
     private AsyncFacebookRunner mAsyncRunner;
     private DialogListener mDialogListener;
     private SharedPreferences mPrefs;	
 	private EasyChatManager mChat;
-	private PeopleFragment peopleFrag;
+	private PeopleFragment peopleFragment;
+	private MessagesFragment messagesFragment;
+	private ConversationFragment conversationFragment;
 	
     @Override
     public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_easychat);
-		SmackAndroid.init(this);
-		context = this;		
+    	super.onCreate(savedInstanceState);
+    	setContentView(R.layout.easychat);
+    	
+		context = this;	
+		mChat = new EasyChatManager(context);
 		facebook = new Facebook(appID);
 		mAsyncRunner = new AsyncFacebookRunner(facebook);
-		mChat = new EasyChatManager();
-		peopleFrag = (PeopleFragment) getSupportFragmentManager().findFragmentById(R.id.fragment_people);
-        
-		/* Facebook authorize */
 		mDialogListener = new DialogListener() {
 			
 			@Override
@@ -59,15 +58,37 @@ public class EasyChatActivity extends FragmentActivity {
 			}
 			
             @Override
-            public void onFacebookError(FacebookError error) {}
+            public void onCancel() {
+            	// TODO What happen if user cancel authorize 
+            }
+			
+            @Override
+            public void onFacebookError(FacebookError e) {
+            	Log.e(TAG, Log.getStackTraceString(e));
+            }
 
             @Override
-            public void onError(DialogError e) {}
-
-            @Override
-            public void onCancel() {}
+            public void onError(DialogError e) {
+            	Log.e(TAG, Log.getStackTraceString(e));
+            }
+            
 		};
+
+    	/* Set Fragments */
+		peopleFragment = new PeopleFragment();
+    	getSupportFragmentManager().beginTransaction()
+        		.add(R.id.first_pane, peopleFragment).commit();
+        new FacebookConnectTask().execute();
+        
+    	// If dual view then set MessagesFragment
+    	if (findViewById(R.id.second_pane) != null) {
+    		messagesFragment = new MessagesFragment();
+    		getSupportFragmentManager().beginTransaction()
+    			.add(R.id.second_pane, messagesFragment).commit();
+    		new FacebookMessagesTask().execute();
+    	}
 		
+		/* Facebook authorize */
 		// Get existing access_token if any
         mPrefs = getPreferences(MODE_PRIVATE);
         String access_token = mPrefs.getString("access_token", null);
@@ -81,48 +102,6 @@ public class EasyChatActivity extends FragmentActivity {
         Log.v(TAG, "Session: " + facebook.isSessionValid());
         if (! facebook.isSessionValid())
 	        facebook.authorize(this, PERMISSIONS, mDialogListener);
-        
-        // Connect to Facebook Chat
-        new FacebookConnectTask().execute();
-    }
-
-    /* Connect to Facebook Chat by XMPP */
-    private class FacebookConnectTask extends AsyncTask<Void, Void, PeopleAdapter> {
-
-		@Override
-		protected PeopleAdapter doInBackground(Void... params) {
-			try {
-				while (true) {
-					if (! facebook.isSessionValid()) {
-						Log.v(TAG, "Sleeping...");
-						Thread.sleep(1000);
-					} else {
-						// TODO fbChat does not login always 
-						//if (fbChat.login(appID, facebook.getAccessToken())) {
-						if (mChat.login(appID, "AAAGCiJZC12vUBAGK03mxEImBDQVkrVwgPcUFqrklaNVoHBSYCKVF797ARwUy9LVZBPVD2d6lirPs1fuAm9BrDnk83PxmSXlOPHjhDsWq6Ybp2KZCUxa")) {
-							Log.v(TAG, "Connected !!!");
-							return new PeopleAdapter(context, mChat.getPeople());
-						} else {
-							Log.v(TAG, "Not connected !!!");
-							Log.v(TAG, "Token: " + facebook.getAccessToken());
-							Log.v(TAG, "Expires: " + facebook.getAccessExpires());
-						}
-						break;
-					}
-				}								
-			} catch (InterruptedException e) {
-				Log.e(TAG, Log.getStackTraceString(e));
-				mChat.logout();
-				Thread.currentThread().interrupt();
-			}			
-			return null;
-		}
-		
-		@Override
-		protected void onPostExecute(PeopleAdapter adapter) {
-			peopleFrag.show(adapter);
-		}
-    	
     }
     
     @Override
@@ -170,17 +149,28 @@ public class EasyChatActivity extends FragmentActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
     	// Handle item selection
     	switch (item.getItemId()) {
+    	case R.id.menu_people:
+    		
+    		return true;
+    	case R.id.menu_messages:
+//    		FragmentManager fragmentManager = getSupportFragmentManager();
+//    		FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+//    		messagesFragment = new MessagesFragment();
+//    		fragmentTransaction.add(R.id.fragment_single_pane, messagesFragment);
+//    		fragmentTransaction.commit();
+    		return true;
     	case R.id.menu_login:
     		// Facebook authorize
     		facebook.authorize(this, PERMISSIONS, mDialogListener);
     		new FacebookConnectTask().execute();
     		
     		return true;
-    	case R.id.menu_logout:
-    		// Facebook logout            
+    	case R.id.menu_logout:            
           	mChat.logout();
 
+          	// Facebook logout
 			mAsyncRunner.logout(this, new RequestListener() {
+				
 				  @Override
 				  public void onComplete(String response, Object state) {}
 				  
@@ -197,6 +187,7 @@ public class EasyChatActivity extends FragmentActivity {
 				  
 				  @Override
 				  public void onFacebookError(FacebookError e, Object state) {}
+				  
 			});
 		
 			// Invalidate token in shared preferences
@@ -205,8 +196,13 @@ public class EasyChatActivity extends FragmentActivity {
             editor.putLong("access_expires", 0);
             editor.commit();
             
-            // Clear list 
-            peopleFrag.clear();
+            // Clear fragments
+            if (peopleFragment != null)
+            	peopleFragment.clear();
+            if (messagesFragment != null)
+            	messagesFragment.clear();
+            if (conversationFragment != null)
+            	/* TODO Set ConversationFragment clear */;
 
 			return true;
     	case R.id.menu_settings:
@@ -215,6 +211,113 @@ public class EasyChatActivity extends FragmentActivity {
     	default:
     		return super.onOptionsItemSelected(item);
     	}
+    }
+    
+    /* Connect to Facebook Chat by XMPP */
+    private class FacebookConnectTask extends AsyncTask<Void, Void, PeopleAdapter> {
+
+		@Override
+		protected PeopleAdapter doInBackground(Void... params) {
+			try {
+				while (true) {
+					if (! facebook.isSessionValid()) {
+						Log.v(TAG, "Sleeping FacebookConnectTask...");
+						Thread.sleep(1000);
+					} else {
+						// TODO fbChat does not login always 
+						if (mChat.login(appID, facebook.getAccessToken())) {
+							Log.v(TAG, "Connected !!!");
+							Log.v(TAG, "Token: " + facebook.getAccessToken());
+							Log.v(TAG, "Expires: " + new Date(facebook.getAccessExpires()*1000));
+							return new PeopleAdapter(context, mChat.getPeople());
+						} else {
+							Log.v(TAG, "Not connected !!!");
+							Log.v(TAG, "Token: " + facebook.getAccessToken());
+							Log.v(TAG, "Expires: " + new Date(facebook.getAccessExpires()*1000));
+							//return new PeopleAdapter(context, new String[]{});
+						}
+					}
+				}								
+			} catch (InterruptedException e) {
+				Log.e(TAG, Log.getStackTraceString(e));
+				mChat.logout();
+				Thread.currentThread().interrupt();
+			}			
+			
+			return null;
+		}
+		
+		@Override
+		protected void onPostExecute(PeopleAdapter adapter) {
+				peopleFragment.show(adapter);
+		}
+    	
+    }
+    
+    /* Get Facebook Messages */
+    private class FacebookMessagesTask extends AsyncTask<Void, Void, Void> {
+
+		@Override
+		protected Void doInBackground(Void... params) {
+			try {
+				while (true) {
+					if (! facebook.isSessionValid()) {
+						Log.v(TAG, "Sleeping FacebookMessagesTask...");
+						Thread.sleep(1000);
+					} else {						
+						String query = "SELECT thread_id, snippet_author, "
+								+ "snippet FROM thread WHERE folder_id = 0";
+						Bundle bundles = new Bundle();
+						bundles.putString("q", query);
+						
+						mAsyncRunner.request("fql", bundles, new RequestListener() {
+							
+							@Override
+							public void onComplete(String response, Object state) {
+								Gson gson = new Gson();
+								FacebookThread fbThread = gson.fromJson(response, 
+										FacebookThread.class);
+								messagesFragment.show(fbThread);								
+							}
+							
+							@Override
+							public void onFacebookError(
+									FacebookError e, Object state) {
+								Log.e(TAG, Log.getStackTraceString(e));								
+							}
+							
+							@Override
+							public void onMalformedURLException(
+									MalformedURLException e, Object state) {
+								Log.e(TAG, Log.getStackTraceString(e));								
+							}
+							
+							@Override
+							public void onIOException(
+									IOException e, Object state) {
+								Log.e(TAG, Log.getStackTraceString(e));								
+							}
+							
+							@Override
+							public void onFileNotFoundException(
+									FileNotFoundException e, Object state) {
+								Log.e(TAG, Log.getStackTraceString(e));								
+							}
+							
+						});
+						
+						return null;
+					}
+				}
+			} catch (InterruptedException e) {
+				Log.e(TAG, Log.getStackTraceString(e));
+				mChat.logout();
+				Thread.currentThread().interrupt();
+			}
+			
+			return null;
+		}
+    	
     }
     
 }
