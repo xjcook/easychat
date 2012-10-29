@@ -17,13 +17,12 @@ public class MessagesFragment extends ListFragment {
 	@Override
 	public void onListItemClick(ListView l, View v, int position, long id) {
 		super.onListItemClick(l, v, position, id);
-		String item = (String) getListAdapter().getItem(position);
-    	Toast.makeText(getActivity(), item + " selected", Toast.LENGTH_LONG).show();
+		FacebookData data = (FacebookData) getListAdapter().getItem(position);
+    	Toast.makeText(getActivity(), data.thread_id + " selected", Toast.LENGTH_LONG).show();
 	}
 	
 	public void show(FacebookThread fbThread) {
-		// TODO Show facebook threads
-		setListAdapter(null);
+		setListAdapter(new MessagesAdapter(getActivity(), fbThread.data));
 	}
 	
 	public void clear() {

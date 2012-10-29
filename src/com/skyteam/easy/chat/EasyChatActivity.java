@@ -37,6 +37,7 @@ public class EasyChatActivity extends FragmentActivity {
 	private PeopleFragment peopleFragment;
 	private MessagesFragment messagesFragment;
 	private ConversationFragment conversationFragment;
+	private FacebookThread fbThread;
 	
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -275,9 +276,16 @@ public class EasyChatActivity extends FragmentActivity {
 							@Override
 							public void onComplete(String response, Object state) {
 								Gson gson = new Gson();
-								FacebookThread fbThread = gson.fromJson(response, 
+								fbThread = gson.fromJson(response, 
 										FacebookThread.class);
-								messagesFragment.show(fbThread);								
+								runOnUiThread(new Runnable() {
+
+									@Override
+									public void run() {
+										messagesFragment.show(fbThread);
+									}
+									
+								});								
 							}
 							
 							@Override
