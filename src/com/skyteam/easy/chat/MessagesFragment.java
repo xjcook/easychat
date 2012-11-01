@@ -18,11 +18,12 @@ public class MessagesFragment extends ListFragment {
 	public void onListItemClick(ListView l, View v, int position, long id) {
 		super.onListItemClick(l, v, position, id);
 		FacebookData data = (FacebookData) getListAdapter().getItem(position);
-    	Toast.makeText(getActivity(), data.thread_id + " selected", Toast.LENGTH_LONG).show();
+    	Toast.makeText(getActivity(), data.getThreadId() + " selected", 
+    			Toast.LENGTH_LONG).show();
 	}
 	
 	public void show(FacebookThread fbThread) {
-		setListAdapter(new MessagesAdapter(getActivity(), fbThread.data));
+		setListAdapter(new MessagesAdapter(getActivity(), fbThread.getData()));
 	}
 	
 	public void clear() {

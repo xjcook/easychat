@@ -26,8 +26,9 @@ import com.google.gson.Gson;
 public class EasyChatActivity extends FragmentActivity {
 	
 	private static final String TAG = "EasyChatActivity";	
-    private static final String appID = "424998287563509";
+    private static final String APPID = "424998287563509";
     private static final String[] PERMISSIONS = {"xmpp_login", "read_mailbox"};
+    private static final int SLEEPTIME = 1000;
     private Context context;
 	private Facebook facebook;
     private AsyncFacebookRunner mAsyncRunner;
@@ -46,7 +47,7 @@ public class EasyChatActivity extends FragmentActivity {
     	
 		context = this;	
 		mChat = new EasyChatManager(context);
-		facebook = new Facebook(appID);
+		facebook = new Facebook(APPID);
 		mAsyncRunner = new AsyncFacebookRunner(facebook);
 		mDialogListener = new DialogListener() {
 			
@@ -223,10 +224,10 @@ public class EasyChatActivity extends FragmentActivity {
 				while (true) {
 					if (! facebook.isSessionValid()) {
 						Log.v(TAG, "Sleeping FacebookConnectTask...");
-						Thread.sleep(1000);
+						Thread.sleep(SLEEPTIME);
 					} else {
 						// TODO fbChat does not login always 
-						if (mChat.login(appID, facebook.getAccessToken())) {
+						if (mChat.login(APPID, facebook.getAccessToken())) {
 							Log.v(TAG, "Connected !!!");
 							Log.v(TAG, "Token: " + facebook.getAccessToken());
 							Log.v(TAG, "Expires: " + new Date(facebook.getAccessExpires()*1000));
@@ -264,7 +265,7 @@ public class EasyChatActivity extends FragmentActivity {
 				while (true) {
 					if (! facebook.isSessionValid()) {
 						Log.v(TAG, "Sleeping FacebookMessagesTask...");
-						Thread.sleep(1000);
+						Thread.sleep(SLEEPTIME);
 					} else {						
 						String query = "SELECT thread_id, snippet_author, "
 								+ "snippet FROM thread WHERE folder_id = 0";

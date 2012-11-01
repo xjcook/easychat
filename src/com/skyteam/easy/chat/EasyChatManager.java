@@ -33,17 +33,23 @@ public class EasyChatManager {
 	}
 	
 	public boolean login(String appID, String accessToken) {
-		try {
-			SASLAuthentication.registerSASLMechanism("X-FACEBOOK-PLATFORM", SASLXFacebookPlatformMechanism.class);
+		try {		
+			SASLAuthentication.registerSASLMechanism("X-FACEBOOK-PLATFORM", 
+					SASLXFacebookPlatformMechanism.class);
 		    SASLAuthentication.supportSASLMechanism("X-FACEBOOK-PLATFORM", 0);
+		    
 		    if (! xmpp.isConnected())
 		    	xmpp.connect();
-		    xmpp.login(appID, accessToken, "EasyChat");
-			return true;
+		    
+		    xmpp.login(appID, accessToken, "Easy Chat");
+			
+		    return true;
+		    
 		} catch (XMPPException e) {
 			Log.e(TAG, Log.getStackTraceString(e));
 			xmpp.disconnect();
 		}	
+		
 		return false;
 	}
 	
@@ -70,5 +76,12 @@ public class EasyChatManager {
 		} else {
 			return null;
 		}
+	}
+	
+	public Roster getRoster() {
+		if (xmpp.isAuthenticated())
+			return xmpp.getRoster();
+		else
+			return null;
 	}
 }

@@ -2,6 +2,9 @@ package com.skyteam.easy.chat;
 
 public class FacebookThread {
 	
-	public FacebookData[] data;
+	private FacebookData[] data;
 
+	public FacebookData[] getData() {
+		return data;
+	}
 }

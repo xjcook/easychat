@@ -2,8 +2,20 @@ package com.skyteam.easy.chat;
 
 public class FacebookData {
 
-	public String thread_id;
-	public long snippet_author;
-	public String snippet;
+	private String thread_id;
+	private long snippet_author;
+	private String snippet;
+	
+	public String getThreadId() {
+		return thread_id;
+	}
+	
+	public String getSnippet() {
+		return snippet;
+	}
+	
+	public long getSnippetAuthor() {
+		return snippet_author;
+	}
 
 }

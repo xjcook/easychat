@@ -36,7 +36,7 @@ public class MessagesAdapter extends ArrayAdapter<FacebookData> {
 		}
 		
 		ViewHolder holder = (ViewHolder) rowView.getTag();
-		String s = data[position].snippet;
+		String s = data[position].getSnippet();
 		holder.text.setText(s);
 		
 		return rowView;
