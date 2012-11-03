@@ -32,7 +32,6 @@ public class EasyChatActivity extends FragmentActivity {
     private Context context;
 	private Facebook facebook;
     private AsyncFacebookRunner mAsyncRunner;
-    private DialogListener mDialogListener;
     private SharedPreferences mPrefs;	
 	private EasyChatManager mChat;
 	private PeopleFragment peopleFragment;
@@ -49,61 +48,22 @@ public class EasyChatActivity extends FragmentActivity {
 		mChat = new EasyChatManager(context);
 		facebook = new Facebook(APPID);
 		mAsyncRunner = new AsyncFacebookRunner(facebook);
-		mDialogListener = new DialogListener() {
-			
-			@Override
-			public void onComplete(Bundle values) {
-				SharedPreferences.Editor editor = mPrefs.edit();
-                editor.putString("access_token", facebook.getAccessToken());
-                editor.putLong("access_expires", facebook.getAccessExpires());
-                editor.commit();				
-			}
-			
-            @Override
-            public void onCancel() {
-            	// TODO What happen if user cancel authorize 
-            }
-			
-            @Override
-            public void onFacebookError(FacebookError e) {
-            	Log.e(TAG, Log.getStackTraceString(e));
-            }
-
-            @Override
-            public void onError(DialogError e) {
-            	Log.e(TAG, Log.getStackTraceString(e));
-            }
-            
-		};
-
+		
+		facebookAuthorize();
+		
     	/* Set Fragments */
 		peopleFragment = new PeopleFragment();
     	getSupportFragmentManager().beginTransaction()
         		.add(R.id.first_pane, peopleFragment).commit();
-        new FacebookConnectTask().execute();
+        new ShowPeopleTask().execute();
         
     	// If dual view then set MessagesFragment
     	if (findViewById(R.id.second_pane) != null) {
     		messagesFragment = new MessagesFragment();
     		getSupportFragmentManager().beginTransaction()
     			.add(R.id.second_pane, messagesFragment).commit();
-    		new FacebookMessagesTask().execute();
+    		new ShowMessagesTask().execute();
     	}
-		
-		/* Facebook authorize */
-		// Get existing access_token if any
-        mPrefs = getPreferences(MODE_PRIVATE);
-        String access_token = mPrefs.getString("access_token", null);
-        long expires = mPrefs.getLong("access_expires", 0);
-        if (access_token != null) 
-        	facebook.setAccessToken(access_token);
-        if (expires != 0) 
-        	facebook.setAccessExpires(expires);
-        
-        // Only call authorize if the access_token has expired
-        Log.v(TAG, "Session: " + facebook.isSessionValid());
-        if (! facebook.isSessionValid())
-	        facebook.authorize(this, PERMISSIONS, mDialogListener);
     }
     
     @Override
@@ -163,40 +123,14 @@ public class EasyChatActivity extends FragmentActivity {
     		return true;
     	case R.id.menu_login:
     		// Facebook authorize
-    		facebook.authorize(this, PERMISSIONS, mDialogListener);
-    		new FacebookConnectTask().execute();
+    		facebookAuthorize();
+    		new ShowPeopleTask().execute();
     		
     		return true;
-    	case R.id.menu_logout:            
+    	case R.id.menu_logout:
+    		// Chat & Facebook logout
+    		facebookLogout();
           	mChat.logout();
-
-          	// Facebook logout
-			mAsyncRunner.logout(this, new RequestListener() {
-				
-				  @Override
-				  public void onComplete(String response, Object state) {}
-				  
-				  @Override
-				  public void onIOException(IOException e, Object state) {}
-				  
-				  @Override
-				  public void onFileNotFoundException(FileNotFoundException e,
-				        Object state) {}
-				  
-				  @Override
-				  public void onMalformedURLException(MalformedURLException e,
-				        Object state) {}
-				  
-				  @Override
-				  public void onFacebookError(FacebookError e, Object state) {}
-				  
-			});
-		
-			// Invalidate token in shared preferences
-			SharedPreferences.Editor editor = mPrefs.edit();
-            editor.putString("access_token", null);
-            editor.putLong("access_expires", 0);
-            editor.commit();
             
             // Clear fragments
             if (peopleFragment != null)
@@ -215,8 +149,84 @@ public class EasyChatActivity extends FragmentActivity {
     	}
     }
     
+    private void facebookAuthorize() {
+    	DialogListener dialogListener = new DialogListener() {
+			
+			@Override
+			public void onComplete(Bundle values) {
+				SharedPreferences.Editor editor = mPrefs.edit();
+                editor.putString("access_token", facebook.getAccessToken());
+                editor.putLong("access_expires", facebook.getAccessExpires());
+                editor.commit();				
+			}
+			
+            @Override
+            public void onCancel() {
+            	// TODO What happen if user cancel authorize 
+            }
+			
+            @Override
+            public void onFacebookError(FacebookError e) {
+            	Log.e(TAG, Log.getStackTraceString(e));
+            }
+
+            @Override
+            public void onError(DialogError e) {
+            	Log.e(TAG, Log.getStackTraceString(e));
+            }
+            
+		};
+		
+		/* Facebook authorize */
+		// Get existing access_token if any
+        mPrefs = getPreferences(MODE_PRIVATE);
+        String access_token = mPrefs.getString("access_token", null);
+        long expires = mPrefs.getLong("access_expires", 0);
+        if (access_token != null) 
+        	facebook.setAccessToken(access_token);
+        if (expires != 0) 
+        	facebook.setAccessExpires(expires);
+        
+        // Only call authorize if the access_token has expired
+        Log.v(TAG, "Session: " + facebook.isSessionValid());
+        if (! facebook.isSessionValid())
+	        facebook.authorize(this, PERMISSIONS, dialogListener);
+    }
+    
+    private void facebookLogout() {
+    	RequestListener requestListener = new RequestListener() {
+			
+			  @Override
+			  public void onComplete(String response, Object state) {
+				  // Invalidate token in shared preferences
+				  SharedPreferences.Editor editor = mPrefs.edit();
+				  editor.putString("access_token", null);
+				  editor.putLong("access_expires", 0);
+				  editor.commit();
+			  }
+			  
+			  @Override
+			  public void onIOException(IOException e, Object state) {}
+			  
+			  @Override
+			  public void onFileNotFoundException(FileNotFoundException e,
+			        Object state) {}
+			  
+			  @Override
+			  public void onMalformedURLException(MalformedURLException e,
+			        Object state) {}
+			  
+			  @Override
+			  public void onFacebookError(FacebookError e, Object state) {}
+			  
+		};
+    	
+    	// Facebook logout
+		mAsyncRunner.logout(this, requestListener);		
+    }
+    
     /* Connect to Facebook Chat by XMPP */
-    private class FacebookConnectTask extends AsyncTask<Void, Void, PeopleAdapter> {
+    private class ShowPeopleTask extends AsyncTask<Void, Void, PeopleAdapter> {
 
 		@Override
 		protected PeopleAdapter doInBackground(Void... params) {
@@ -257,7 +267,7 @@ public class EasyChatActivity extends FragmentActivity {
     }
     
     /* Get Facebook Messages */
-    private class FacebookMessagesTask extends AsyncTask<Void, Void, Void> {
+    private class ShowMessagesTask extends AsyncTask<Void, Void, Void> {
 
 		@Override
 		protected Void doInBackground(Void... params) {
