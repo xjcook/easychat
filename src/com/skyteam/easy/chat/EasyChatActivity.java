@@ -51,12 +51,12 @@ public class EasyChatActivity extends FragmentActivity {
     	FragmentTransaction transaction = getSupportFragmentManager()
     			.beginTransaction();
     	
-    	// Always show PeopleFragment
-		peopleFragment = new PeopleFragment();
-		transaction.add(R.id.first_pane, peopleFragment);
-        new ShowPeopleTask().execute();
+    	if (findViewById(R.id.first_pane) != null) {
+			peopleFragment = new PeopleFragment();
+			transaction.add(R.id.first_pane, peopleFragment);
+	        new ShowPeopleTask().execute();
+    	}
         
-    	// If dual view then set MessagesFragment
     	if (findViewById(R.id.second_pane) != null) {
     		messagesFragment = new MessagesFragment();
     		transaction.add(R.id.second_pane, messagesFragment);
@@ -106,7 +106,6 @@ public class EasyChatActivity extends FragmentActivity {
     	MenuItem logoutItem = menu.findItem(R.id.menu_logout);
     	
     	// Set visibility
-    	// TODO faster visibility switch
     	if (facebook.isSessionValid()) {
     		loginItem.setVisible(false);
     		logoutItem.setVisible(true);
@@ -124,13 +123,17 @@ public class EasyChatActivity extends FragmentActivity {
     	
     	// Show people
     	case R.id.menu_people:
-    		new ShowPeopleTask().execute();
+    		if (findViewById(R.id.first_pane) != null) {
+    			new ShowPeopleTask().execute();
+    		}
     		
     		return true;
     		
     	// Show messages
     	case R.id.menu_messages:
-    		new ShowMessagesTask().execute();
+    		if (findViewById(R.id.second_pane) != null) {
+    			new ShowMessagesTask().execute();
+    		}
     		
     		return true;
     		
@@ -138,7 +141,9 @@ public class EasyChatActivity extends FragmentActivity {
     	case R.id.menu_login:
     		facebookLogin();
     		
-    		new ShowPeopleTask().execute();
+    		if (findViewById(R.id.first_pane) != null) {
+    			new ShowPeopleTask().execute();
+    		}
     		
     		if (findViewById(R.id.second_pane) != null) {
     			new ShowMessagesTask().execute();
