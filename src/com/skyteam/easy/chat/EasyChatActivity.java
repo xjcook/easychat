@@ -56,6 +56,7 @@ public class EasyChatActivity extends FragmentActivity {
             transaction.add(R.id.first_pane, peopleFragment);
             new ShowPeopleTask().execute();
         }
+        
         if (findViewById(R.id.second_pane) != null) {
             messagesFragment = new MessagesFragment();
             transaction.add(R.id.second_pane, messagesFragment);
@@ -103,6 +104,7 @@ public class EasyChatActivity extends FragmentActivity {
         // Get menu items
         MenuItem loginItem = menu.findItem(R.id.menu_login);
         MenuItem logoutItem = menu.findItem(R.id.menu_logout);
+        
         // Set visibility
         if (facebook.isSessionValid()) {
             loginItem.setVisible(false);
@@ -265,6 +267,7 @@ public class EasyChatActivity extends FragmentActivity {
             }
             
         };
+        
         // Invalidate token in shared preferences
         SharedPreferences.Editor editor = mPrefs.edit();
         editor.putString("access_token", null);
@@ -275,7 +278,7 @@ public class EasyChatActivity extends FragmentActivity {
         mAsyncRunner.logout(this, requestListener);        
     }
     
-    /* Connect to Facebook Chat by XMPP */
+    /* Connect to XMPP and get people */
     private class ShowPeopleTask extends AsyncTask<Void, Void, Collection<RosterEntry>> {
         
         private static final String TAG = "ShowPeopleTask";
