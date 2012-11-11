@@ -15,6 +15,7 @@ public class PeopleFragment extends ListFragment {
 	@Override
 	public void onActivityCreated(Bundle savedInstanceState) {
 		super.onActivityCreated(savedInstanceState);
+		setListAdapter(null);
 	}
 
 	@Override

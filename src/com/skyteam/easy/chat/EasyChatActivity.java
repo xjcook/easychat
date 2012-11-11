@@ -32,9 +32,9 @@ public class EasyChatActivity extends FragmentActivity {
     private static final String APPID = "424998287563509";
     private static final String[] PERMISSIONS = {"xmpp_login", "read_mailbox"};
     private static final int SLEEPTIME = 500;
+	private EasyChatManager mChat = new EasyChatManager();
 	private Facebook facebook = new Facebook(APPID);
     private AsyncFacebookRunner mAsyncRunner = new AsyncFacebookRunner(facebook);
-	private EasyChatManager mChat = new EasyChatManager();
     private SharedPreferences mPrefs;	
 	private PeopleFragment peopleFragment;
 	private MessagesFragment messagesFragment;
@@ -136,10 +136,13 @@ public class EasyChatActivity extends FragmentActivity {
     		
     	// Log In
     	case R.id.menu_login:
-    		// Chat & Facebook login
     		facebookLogin();
-    		// TODO Restart activity, not only People task
+    		
     		new ShowPeopleTask().execute();
+    		
+    		if (findViewById(R.id.second_pane) != null) {
+    			new ShowMessagesTask().execute();
+    		}
     		
     		return true;
     		
@@ -168,7 +171,7 @@ public class EasyChatActivity extends FragmentActivity {
     		
     	// Settings
     	case R.id.menu_settings:
-    		/* TODO What happens if user click on settings button */
+    		/* TODO what happens if user click on settings button */
     		
     		return super.onOptionsItemSelected(item);
     	
@@ -192,7 +195,7 @@ public class EasyChatActivity extends FragmentActivity {
 			
             @Override
             public void onCancel() {
-            	// TODO What happen if user cancel authorize 
+            	// TODO what happens if user cancel authorize 
             }
 			
             @Override
@@ -270,7 +273,8 @@ public class EasyChatActivity extends FragmentActivity {
 					if (facebook.isSessionValid() && mChat.isAuthenticated()) {
 						Log.v(TAG, "Authorized & Connected!");
 						
-						Collection<RosterEntry> entries = mChat.getRoster().getEntries();
+						Collection<RosterEntry> entries = mChat.getRoster()
+								.getEntries();
 						
 						if (! entries.isEmpty()) {
 							return entries;
