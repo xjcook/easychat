@@ -29,247 +29,252 @@ import com.google.gson.Gson;
 public class EasyChatActivity extends FragmentActivity {
 	
 	private static final String TAG = "EasyChatActivity";	
-    private static final String APPID = "424998287563509";
-    private static final String[] PERMISSIONS = {"xmpp_login", "read_mailbox"};
-    private static final int SLEEPTIME = 500;
+	private static final String APPID = "424998287563509";
+	private static final String[] PERMISSIONS = {"xmpp_login", "read_mailbox"};
+	private static final int SLEEPTIME = 500;
 	private EasyChatManager mChat = new EasyChatManager();
 	private Facebook facebook = new Facebook(APPID);
-    private AsyncFacebookRunner mAsyncRunner = new AsyncFacebookRunner(facebook);
-    private SharedPreferences mPrefs;	
+	private AsyncFacebookRunner mAsyncRunner = new AsyncFacebookRunner(facebook);
+	private SharedPreferences mPrefs;	
 	private PeopleFragment peopleFragment;
 	private MessagesFragment messagesFragment;
 	private ConversationFragment conversationFragment;
 	
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-    	super.onCreate(savedInstanceState);
-    	setContentView(R.layout.easychat);
+	@Override
+	public void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		setContentView(R.layout.easychat);
 
 		facebookLogin();
-		
 		/* Load Fragments */
-    	FragmentTransaction transaction = getSupportFragmentManager()
-    			.beginTransaction();
-    	
-    	if (findViewById(R.id.first_pane) != null) {
+		FragmentTransaction transaction = getSupportFragmentManager()
+	.beginTransaction();
+		if (findViewById(R.id.first_pane) != null) {
 			peopleFragment = new PeopleFragment();
 			transaction.add(R.id.first_pane, peopleFragment);
-	        new ShowPeopleTask().execute();
-    	}
-        
-    	if (findViewById(R.id.second_pane) != null) {
-    		messagesFragment = new MessagesFragment();
-    		transaction.add(R.id.second_pane, messagesFragment);
-    		new ShowMessagesTask().execute();
-    	}
-    	
-    	transaction.commit();
-    }
-    
-    @Override
-    public void onResume() {
-    	super.onResume();
-        facebook.extendAccessTokenIfNeeded(this, null);
-    }
-    
-    @Override
-    public void onPause() {
-    	super.onPause();
-    }
-    
-    @Override
-    public void onDestroy() {
-    	super.onDestroy();
-    	
-    	if (isFinishing()) {
-    		facebookLogout();
-    		mChat.logout();
-    	}
-    }
-    
-    @Override
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        facebook.authorizeCallback(requestCode, resultCode, data);
-    }
-    
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.activity_easychat, menu);
-        return true;
-    }
-    
-    @Override
-    public boolean onPrepareOptionsMenu(Menu menu) {
-    	// Get menu items
-    	MenuItem loginItem = menu.findItem(R.id.menu_login);
-    	MenuItem logoutItem = menu.findItem(R.id.menu_logout);
-    	
-    	// Set visibility
-    	if (facebook.isSessionValid()) {
-    		loginItem.setVisible(false);
-    		logoutItem.setVisible(true);
-    	} else {
-    		loginItem.setVisible(true);
-    		logoutItem.setVisible(false);
-    	}
-    	
-    	return true;
-    }
-    
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-    	switch (item.getItemId()) {
-    	
-    	// Show people
-    	case R.id.menu_people:
-    		if (findViewById(R.id.first_pane) != null) {
-    			new ShowPeopleTask().execute();
-    		}
-    		
-    		return true;
-    		
-    	// Show messages
-    	case R.id.menu_messages:
-    		if (findViewById(R.id.second_pane) != null) {
-    			new ShowMessagesTask().execute();
-    		}
-    		
-    		return true;
-    		
-    	// Log In
-    	case R.id.menu_login:
-    		facebookLogin();
-    		
-    		if (findViewById(R.id.first_pane) != null) {
-    			new ShowPeopleTask().execute();
-    		}
-    		
-    		if (findViewById(R.id.second_pane) != null) {
-    			new ShowMessagesTask().execute();
-    		}
-    		
-    		return true;
-    		
-    	// Log Out
-    	case R.id.menu_logout:
-    		// Chat & Facebook logout 
-    		facebookLogout();
-    		mChat.logout();  
-    		
-            // Clear fragments
-            if (peopleFragment != null)
-            	peopleFragment.clear();
-            if (messagesFragment != null)
-            	messagesFragment.clear();
-            if (conversationFragment != null)
-            	conversationFragment.clear();
-
-			return true;
-			
-		// Exit option only for testing purposes
-    	case R.id.menu_exit:
-//    		android.os.Process.killProcess(android.os.Process.myPid());
-    		finish();
-    		
-    		return true;
-    		
-    	// Settings
-    	case R.id.menu_settings:
-    		/* TODO what happens if user click on settings button */
-    		
-    		return super.onOptionsItemSelected(item);
-    	
-    	default:
-    		return super.onOptionsItemSelected(item);
-    		
-    	}
-    }
-    
-    private void facebookLogin() {
-    	DialogListener dialogListener = new DialogListener() {
-			
-			@Override
-			public void onComplete(Bundle values) {
-				// Save token
-				SharedPreferences.Editor editor = mPrefs.edit();
-                editor.putString("access_token", facebook.getAccessToken());
-                editor.putLong("access_expires", facebook.getAccessExpires());
-                editor.commit();      
+			new ShowPeopleTask().execute();
+		}
+		if (findViewById(R.id.second_pane) != null) {
+			messagesFragment = new MessagesFragment();
+			transaction.add(R.id.second_pane, messagesFragment);
+			new ShowMessagesTask().execute();
+		}
+		transaction.commit();
+	}
+	
+	@Override
+	public void onResume() {
+		super.onResume();
+		facebook.extendAccessTokenIfNeeded(this, null);
+	}
+	
+	@Override
+	public void onPause() {
+		super.onPause();
+	}
+	
+	@Override
+	public void onDestroy() {
+		super.onDestroy();
+		if (isFinishing()) {
+			facebookLogout();
+			mChat.logout();
+		}
+	}
+	
+	@Override
+	public void onActivityResult(int requestCode, int resultCode, Intent data) {
+		super.onActivityResult(requestCode, resultCode, data);
+		facebook.authorizeCallback(requestCode, resultCode, data);
+	}
+	
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+		getMenuInflater().inflate(R.menu.activity_easychat, menu);
+		return true;
+	}
+	
+	@Override
+	public boolean onPrepareOptionsMenu(Menu menu) {
+		// Get menu items
+		MenuItem loginItem = menu.findItem(R.id.menu_login);
+		MenuItem logoutItem = menu.findItem(R.id.menu_logout);
+		// Set visibility
+		if (facebook.isSessionValid()) {
+			loginItem.setVisible(false);
+			logoutItem.setVisible(true);
+		} else {
+			loginItem.setVisible(true);
+			logoutItem.setVisible(false);
+		}
+		
+		return true;
+	}
+	
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		switch (item.getItemId()) {
+		
+		// Show people
+		case R.id.menu_people:
+			if (findViewById(R.id.first_pane) != null) {
+				new ShowPeopleTask().execute();
 			}
 			
-            @Override
-            public void onCancel() {
-            	// TODO what happens if user cancel authorize 
-            }
+			return true;
 			
-            @Override
-            public void onFacebookError(FacebookError e) {
-            	Log.e(TAG, Log.getStackTraceString(e));
-            }
-
-            @Override
-            public void onError(DialogError e) {
-            	Log.e(TAG, Log.getStackTraceString(e));
-            }
-            
+		// Show messages
+		case R.id.menu_messages:
+			if (findViewById(R.id.second_pane) != null) {
+				new ShowMessagesTask().execute();
+			}
+			
+			return true;
+			
+		// Log In
+		case R.id.menu_login:
+			facebookLogin();
+			
+			if (findViewById(R.id.first_pane) != null) {
+				new ShowPeopleTask().execute();
+			}
+			
+			if (findViewById(R.id.second_pane) != null) {
+				new ShowMessagesTask().execute();
+			}
+			
+			return true;
+			
+		// Log Out
+		case R.id.menu_logout:
+			// Chat & Facebook logout 
+			facebookLogout();
+			mChat.logout();  
+			
+			// Clear fragments
+			if (peopleFragment != null)
+				peopleFragment.clear();
+			if (messagesFragment != null)
+				messagesFragment.clear();
+			if (conversationFragment != null)
+				conversationFragment.clear();
+			
+			return true;
+		
+		// Exit option only for testing purposes
+		case R.id.menu_exit:
+//			android.os.Process.killProcess(android.os.Process.myPid());
+			finish();
+			
+			return true;
+			
+		// Settings
+		case R.id.menu_settings:
+			/* TODO what happens if user click on settings button */			
+			return super.onOptionsItemSelected(item);
+		
+		default:
+			return super.onOptionsItemSelected(item);
+			
+		}
+	}
+	
+	private void facebookLogin() {
+		DialogListener dialogListener = new DialogListener() {
+		
+			@Override
+			public void onComplete(Bundle values) {
+				Log.v(TAG, "Facebook logged in");
+				
+				// Save token
+				SharedPreferences.Editor editor = mPrefs.edit();
+				editor.putString("access_token", facebook.getAccessToken());
+				editor.putLong("access_expires", facebook.getAccessExpires());
+				editor.commit();
+			}
+			
+			@Override
+			public void onCancel() {
+				Log.v(TAG, "Facebook login cancelled");
+				/* TODO what happens if user cancel authorize */
+			}
+			
+			@Override
+			public void onFacebookError(FacebookError e) {
+				Log.e(TAG, Log.getStackTraceString(e));
+			}
+			
+			@Override
+			public void onError(DialogError e) {
+				Log.e(TAG, Log.getStackTraceString(e));
+			}
+		
 		};
 		
 		/* Facebook authorize */
 		// Get existing access_token if any
-        mPrefs = getPreferences(MODE_PRIVATE);
-        String access_token = mPrefs.getString("access_token", null);
-        long expires = mPrefs.getLong("access_expires", 0);
-        if (access_token != null) {
-        	facebook.setAccessToken(access_token);
-        }
-        if (expires != 0) { 
-        	facebook.setAccessExpires(expires);
-        }
-        
-        // Only call authorize if the access_token has expired
-        Log.v(TAG, "Session: " + facebook.isSessionValid());
-		if (! facebook.isSessionValid()) {
-	        facebook.authorize(this, PERMISSIONS, dialogListener);
+		mPrefs = getPreferences(MODE_PRIVATE);
+		String access_token = mPrefs.getString("access_token", null);
+		long expires = mPrefs.getLong("access_expires", 0);
+		if (access_token != null) {
+			facebook.setAccessToken(access_token);
 		}
-    }
-    
-    private void facebookLogout() {
-    	RequestListener requestListener = new RequestListener() {
-			
-			  @Override
-			  public void onComplete(String response, Object state) {}
-			  
-			  @Override
-			  public void onIOException(IOException e, Object state) {}
-			  
-			  @Override
-			  public void onFileNotFoundException(FileNotFoundException e,
-			        Object state) {}
-			  
-			  @Override
-			  public void onMalformedURLException(MalformedURLException e,
-			        Object state) {}
-			  
-			  @Override
-			  public void onFacebookError(FacebookError e, Object state) {}
-			  
-		};
+		if (expires != 0) { 
+			facebook.setAccessExpires(expires);
+		}
 		
+		// Only call authorize if the access_token has expired
+		Log.v(TAG, "Session: " + facebook.isSessionValid());
+		if (! facebook.isSessionValid()) {
+			facebook.authorize(this, PERMISSIONS, dialogListener);
+		}
+	}
+	
+	private void facebookLogout() {
+		RequestListener requestListener = new RequestListener() {
+			
+			@Override
+			public void onComplete(String response, Object state) {
+				Log.v(TAG, "Facebook logged out");
+			}
+			
+			@Override
+			public void onFacebookError(FacebookError e, Object state) {
+				Log.e(TAG, Log.getStackTraceString(e));
+			}
+			
+			@Override
+			public void onIOException(IOException e, Object state) {
+				Log.e(TAG, Log.getStackTraceString(e));
+			}
+			
+			@Override
+			public void onFileNotFoundException(FileNotFoundException e, 
+					Object state) {
+				Log.e(TAG, Log.getStackTraceString(e));
+			}
+			
+			@Override
+			public void onMalformedURLException(MalformedURLException e, 
+					Object state) {
+				Log.e(TAG, Log.getStackTraceString(e));
+			}
+			
+		};
 		// Invalidate token in shared preferences
 		SharedPreferences.Editor editor = mPrefs.edit();
 		editor.putString("access_token", null);
 		editor.putLong("access_expires", 0);
 		editor.commit();
-    	
-    	// Facebook logout
+		
+		// Facebook logout
 		mAsyncRunner.logout(this, requestListener);		
-    }
-    
-    /* Connect to Facebook Chat by XMPP */
-    private class ShowPeopleTask extends AsyncTask<Void, Void, Collection<RosterEntry>> {
-    	
-    	private static final String TAG = "ShowPeopleTask";
+	}
+	
+	/* Connect to Facebook Chat by XMPP */
+	private class ShowPeopleTask extends AsyncTask<Void, Void, Collection<RosterEntry>> {
+		
+		private static final String TAG = "ShowPeopleTask";
 
 		@Override
 		protected Collection<RosterEntry> doInBackground(Void... params) {
@@ -277,7 +282,7 @@ public class EasyChatActivity extends FragmentActivity {
 				for (;;) {
 					if (facebook.isSessionValid() && mChat.isAuthenticated()) {
 						Log.v(TAG, "Authorized & Connected!");
-						
+				
 						Collection<RosterEntry> entries = mChat.getRoster()
 								.getEntries();
 						
@@ -295,14 +300,14 @@ public class EasyChatActivity extends FragmentActivity {
 							Log.v(TAG, "Token: " + facebook.getAccessToken());
 						}
 					}
-					
+			
 					Log.v(TAG, "Sleeping ShowPeopleTask...");
 					Thread.sleep(SLEEPTIME);
 				}								
 			} catch (InterruptedException e) {
 				Log.e(TAG, Log.getStackTraceString(e));
 				Thread.currentThread().interrupt();
-			}			
+			}	
 			
 			return null;
 		}
@@ -315,14 +320,14 @@ public class EasyChatActivity extends FragmentActivity {
 				peopleFragment.clear();
 			}
 		}
-    	
-    }
-    
-    /* Get Facebook Messages */
-    private class ShowMessagesTask extends AsyncTask<Void, Void, FacebookThread> {
-    	
-    	private static final String TAG = "ShowMessagesTask";
-    	private FacebookThread fbThread = null;
+		
+	}
+	
+	/* Get Facebook Messages */
+	private class ShowMessagesTask extends AsyncTask<Void, Void, FacebookThread> {
+		
+		private static final String TAG = "ShowMessagesTask";
+		private FacebookThread fbThread = null;
 
 		@Override
 		protected FacebookThread doInBackground(Void... params) {
@@ -390,7 +395,7 @@ public class EasyChatActivity extends FragmentActivity {
 						Log.v(TAG, "Not authorized!");
 						Log.v(TAG, "Token: " + facebook.getAccessToken());
 					}
-					
+		
 					Log.v(TAG, "Sleeping ShowMessagesTask...");
 					Thread.sleep(SLEEPTIME);
 				}
@@ -410,7 +415,7 @@ public class EasyChatActivity extends FragmentActivity {
 				messagesFragment.clear();
 			}
 		}
-    	
-    }
-    
+		
+	}
+	
 }
