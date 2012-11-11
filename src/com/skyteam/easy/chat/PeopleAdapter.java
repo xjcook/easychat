@@ -1,5 +1,7 @@
 package com.skyteam.easy.chat;
 
+import org.jivesoftware.smack.RosterEntry;
+
 import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -7,18 +9,18 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.TextView;
 
-public class PeopleAdapter extends ArrayAdapter<String> {
+public class PeopleAdapter extends ArrayAdapter<RosterEntry> {
 	private final Context context;
-	private final String[] values;
+	private final RosterEntry[] entries;
 	
 	static class ViewHolder {
 		public TextView text;
 	}
 	
-	public PeopleAdapter(Context context, String[] values) {
-		super(context, R.layout.human_item, values);
+	public PeopleAdapter(Context context, RosterEntry[] entries) {
+		super(context, R.layout.human_item, entries);
 		this.context = context;
-		this.values = values;
+		this.entries = entries;
 	}
 	
 	@Override
@@ -36,8 +38,8 @@ public class PeopleAdapter extends ArrayAdapter<String> {
 		}
 		
 		ViewHolder holder = (ViewHolder) rowView.getTag();
-		String s = values[position];
-		holder.text.setText(s);
+		String name = entries[position].getName();
+		holder.text.setText(name);
 		
 		return rowView;
 	}

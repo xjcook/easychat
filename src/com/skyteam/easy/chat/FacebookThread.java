@@ -7,4 +7,8 @@ public class FacebookThread {
 	public FacebookData[] getData() {
 		return data;
 	}
+	
+	public boolean isEmpty() {
+		return data.length == 0;
+	}
 }

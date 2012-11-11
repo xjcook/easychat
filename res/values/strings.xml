@@ -5,6 +5,7 @@
     <string name="menu_settings">Settings</string>
     <string name="menu_login">Log In</string>
     <string name="menu_logout">Log Out</string>
+    <string name="menu_exit">Exit</string>
     <string name="menu_people">People</string>
     <string name="menu_messages">Messages</string>
 
