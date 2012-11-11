@@ -7,6 +7,7 @@ import java.util.Calendar;
 import java.util.Collection;
 
 import org.jivesoftware.smack.RosterEntry;
+import org.jivesoftware.smack.XMPPException;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -230,7 +231,7 @@ public class EasyChatActivity extends FragmentActivity {
         }
         
         // Only call authorize if the access_token has expired
-        Log.v(TAG, "Session: " + facebook.isSessionValid());
+        Log.v(TAG, "FacebookSession: " + facebook.isSessionValid());
         if (! facebook.isSessionValid()) {
             facebook.authorize(this, PERMISSIONS, dialogListener);
         }
@@ -279,6 +280,7 @@ public class EasyChatActivity extends FragmentActivity {
     }
     
     /* Connect to XMPP and get people */
+    /* TODO progress bar */
     private class ShowPeopleTask extends AsyncTask<Void, Void, Collection<RosterEntry>> {
         
         private static final String TAG = "ShowPeopleTask";
@@ -314,6 +316,10 @@ public class EasyChatActivity extends FragmentActivity {
             } catch (InterruptedException e) {
                 Log.e(TAG, Log.getStackTraceString(e));
                 Thread.currentThread().interrupt();
+            } catch (XMPPException e) {
+                /* TODO show retry button */
+                Log.e(TAG, Log.getStackTraceString(e));
+                mChat.logout();
             }    
             
             return null;
