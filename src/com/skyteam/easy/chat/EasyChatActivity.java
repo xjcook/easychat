@@ -46,9 +46,11 @@ public class EasyChatActivity extends FragmentActivity {
 		setContentView(R.layout.easychat);
 
 		facebookLogin();
+		
 		/* Load Fragments */
 		FragmentTransaction transaction = getSupportFragmentManager()
-	.beginTransaction();
+				.beginTransaction();
+		
 		if (findViewById(R.id.first_pane) != null) {
 			peopleFragment = new PeopleFragment();
 			transaction.add(R.id.first_pane, peopleFragment);
@@ -59,6 +61,7 @@ public class EasyChatActivity extends FragmentActivity {
 			transaction.add(R.id.second_pane, messagesFragment);
 			new ShowMessagesTask().execute();
 		}
+		
 		transaction.commit();
 	}
 	
