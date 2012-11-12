@@ -9,6 +9,9 @@ import java.util.Collection;
 import org.jivesoftware.smack.RosterEntry;
 import org.jivesoftware.smack.XMPPException;
 
+import android.app.Activity;
+import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
@@ -40,12 +43,14 @@ public class EasyChatActivity extends FragmentActivity {
     private PeopleFragment peopleFragment;
     private MessagesFragment messagesFragment;
     private ConversationFragment conversationFragment;
+    private Context context;
     
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.easychat);
-
+        context = this;
+        
         facebookLogin();
         
         /* Load Fragments */
@@ -81,10 +86,11 @@ public class EasyChatActivity extends FragmentActivity {
     @Override
     public void onDestroy() {
         super.onDestroy();
+        mChat.logout();
         
         if (isFinishing()) {
-            facebookLogout();
-            mChat.logout();
+            //mChat.logout();
+            //facebookLogout();
         }
     }
     
@@ -280,15 +286,29 @@ public class EasyChatActivity extends FragmentActivity {
     }
     
     /* Connect to XMPP and get people */
-    /* TODO progress bar */
     private class ShowPeopleTask extends AsyncTask<Void, Void, Collection<RosterEntry>> {
         
         private static final String TAG = "ShowPeopleTask";
+        private ProgressDialog progressDialog;
+        
+        @Override
+        protected void onPreExecute() {
+            progressDialog = new ProgressDialog(context);
+            progressDialog.setMessage("Loading...");
+            progressDialog.setIndeterminate(false);
+            progressDialog.setCancelable(false);
+            progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+            progressDialog.show();
+        }
 
         @Override
         protected Collection<RosterEntry> doInBackground(Void... params) {
             try {
                 for (;;) {
+                    if (isCancelled()) {
+                        return null;
+                    }
+                    
                     if (facebook.isSessionValid() && mChat.isAuthenticated()) {
                         Log.v(TAG, "Authorized & Connected!");
                 
@@ -313,25 +333,33 @@ public class EasyChatActivity extends FragmentActivity {
                     Log.v(TAG, "Sleeping ShowPeopleTask...");
                     Thread.sleep(SLEEPTIME);
                 }                                
-            } catch (InterruptedException e) {
-                Log.e(TAG, Log.getStackTraceString(e));
-                Thread.currentThread().interrupt();
             } catch (XMPPException e) {
                 /* TODO show retry button */
                 Log.e(TAG, Log.getStackTraceString(e));
-                mChat.logout();
-            }    
+                cancel(true);
+            } catch (InterruptedException e) {
+                Log.e(TAG, Log.getStackTraceString(e));
+                cancel(true);
+            }
             
             return null;
         }
         
         @Override
-        protected void onPostExecute(Collection<RosterEntry> entries) {
+        protected void onPostExecute(Collection<RosterEntry> entries) {    
+            progressDialog.dismiss();
+            
             if (entries != null) {
                 peopleFragment.show(entries);
             } else {
                 peopleFragment.clear();
             }
+        }
+        
+        @Override
+        protected void onCancelled(Collection<RosterEntry> entries) {
+            progressDialog.dismiss();
+            mChat.logout();
         }
         
     }
@@ -341,11 +369,26 @@ public class EasyChatActivity extends FragmentActivity {
         
         private static final String TAG = "ShowMessagesTask";
         private FacebookThread fbThread = null;
+        private ProgressDialog progressDialog;
+        
+        @Override
+        protected void onPreExecute() {
+            progressDialog = new ProgressDialog(context);
+            progressDialog.setMessage("Loading...");
+            progressDialog.setIndeterminate(false);
+            progressDialog.setCancelable(false);
+            progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+            progressDialog.show();
+        }
 
         @Override
         protected FacebookThread doInBackground(Void... params) {
             try {
                 for (;;) {
+                    if (isCancelled()) {
+                        return null;
+                    }
+                    
                     if (facebook.isSessionValid()) {
                         Log.v(TAG, "Authorized!");
                         
@@ -414,19 +457,26 @@ public class EasyChatActivity extends FragmentActivity {
                 }
             } catch (InterruptedException e) {
                 Log.e(TAG, Log.getStackTraceString(e));
-                Thread.currentThread().interrupt();
+                cancel(true);
             }
             
             return null;
         }
         
         @Override
-        protected void onPostExecute(FacebookThread fbThread) {
+        protected void onPostExecute(FacebookThread fbThread) {      
+            progressDialog.dismiss();
+            
             if (fbThread != null) {
                 messagesFragment.show(fbThread);
             } else {
                 messagesFragment.clear();
             }
+        }
+        
+        @Override
+        protected void onCancelled(FacebookThread fbThread) {
+            progressDialog.dismiss();
         }
         
     }
