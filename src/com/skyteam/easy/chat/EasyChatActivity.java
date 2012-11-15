@@ -9,9 +9,6 @@ import java.util.Collection;
 import org.jivesoftware.smack.RosterEntry;
 import org.jivesoftware.smack.XMPPException;
 
-import android.app.Activity;
-import android.app.ProgressDialog;
-import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
@@ -21,6 +18,8 @@ import android.support.v4.app.FragmentTransaction;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.ProgressBar;
 
 import com.facebook.android.AsyncFacebookRunner;
 import com.facebook.android.AsyncFacebookRunner.RequestListener;
@@ -43,13 +42,11 @@ public class EasyChatActivity extends FragmentActivity {
     private PeopleFragment peopleFragment;
     private MessagesFragment messagesFragment;
     private ConversationFragment conversationFragment;
-    private Context context;
     
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.easychat);
-        context = this;
         
         facebookLogin();
         
@@ -86,11 +83,11 @@ public class EasyChatActivity extends FragmentActivity {
     @Override
     public void onDestroy() {
         super.onDestroy();
-        mChat.logout();
+        //mChat.logout();
         
         if (isFinishing()) {
-            //mChat.logout();
-            //facebookLogout();
+            mChat.logout();
+            facebookLogout();
         }
     }
     
@@ -184,7 +181,7 @@ public class EasyChatActivity extends FragmentActivity {
         // Settings
         case R.id.menu_settings:
             /* TODO what happens if user click on settings button */            
-            return super.onOptionsItemSelected(item);
+            return true;
         
         default:
             return super.onOptionsItemSelected(item);
@@ -289,16 +286,12 @@ public class EasyChatActivity extends FragmentActivity {
     private class ShowPeopleTask extends AsyncTask<Void, Void, Collection<RosterEntry>> {
         
         private static final String TAG = "ShowPeopleTask";
-        private ProgressDialog progressDialog;
+        private ProgressBar progressBar;
         
         @Override
         protected void onPreExecute() {
-            progressDialog = new ProgressDialog(context);
-            progressDialog.setMessage("Loading...");
-            progressDialog.setIndeterminate(false);
-            progressDialog.setCancelable(false);
-            progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
-            progressDialog.show();
+            progressBar = (ProgressBar) findViewById(R.id.first_progressbar);
+            progressBar.setVisibility(View.VISIBLE);            
         }
 
         @Override
@@ -347,7 +340,7 @@ public class EasyChatActivity extends FragmentActivity {
         
         @Override
         protected void onPostExecute(Collection<RosterEntry> entries) {    
-            progressDialog.dismiss();
+            progressBar.setVisibility(View.GONE);
             
             if (entries != null) {
                 peopleFragment.show(entries);
@@ -358,7 +351,7 @@ public class EasyChatActivity extends FragmentActivity {
         
         @Override
         protected void onCancelled(Collection<RosterEntry> entries) {
-            progressDialog.dismiss();
+            progressBar.setVisibility(View.GONE);
             mChat.logout();
         }
         
@@ -369,16 +362,18 @@ public class EasyChatActivity extends FragmentActivity {
         
         private static final String TAG = "ShowMessagesTask";
         private FacebookThread fbThread = null;
-        private ProgressDialog progressDialog;
+        private ProgressBar progressBar;
         
         @Override
         protected void onPreExecute() {
-            progressDialog = new ProgressDialog(context);
-            progressDialog.setMessage("Loading...");
-            progressDialog.setIndeterminate(false);
-            progressDialog.setCancelable(false);
-            progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
-            progressDialog.show();
+            // if dual view
+            if (findViewById(R.id.second_pane) != null) {
+                progressBar = (ProgressBar) findViewById(R.id.second_progressbar);
+            } else {
+                progressBar = (ProgressBar) findViewById(R.id.first_progressbar);
+            }
+            
+            progressBar.setVisibility(View.VISIBLE);
         }
 
         @Override
@@ -465,7 +460,7 @@ public class EasyChatActivity extends FragmentActivity {
         
         @Override
         protected void onPostExecute(FacebookThread fbThread) {      
-            progressDialog.dismiss();
+            progressBar.setVisibility(View.GONE);
             
             if (fbThread != null) {
                 messagesFragment.show(fbThread);
@@ -476,7 +471,7 @@ public class EasyChatActivity extends FragmentActivity {
         
         @Override
         protected void onCancelled(FacebookThread fbThread) {
-            progressDialog.dismiss();
+            progressBar.setVisibility(View.GONE);
         }
         
     }

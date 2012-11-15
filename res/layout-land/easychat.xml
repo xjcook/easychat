@@ -5,14 +5,34 @@
     android:orientation="horizontal"
     android:baselineAligned="false" >
     
-	<FrameLayout android:id="@+id/first_pane"
+	<RelativeLayout android:id="@+id/first_pane"
 	    android:layout_width="0dp"
 	    android:layout_weight="1"
-	    android:layout_height="match_parent" />
+	    android:layout_height="match_parent" >
+	    
+	    <ProgressBar android:id="@+id/first_progressbar"
+	        android:layout_width="wrap_content"
+	        android:layout_height="wrap_content"
+	        android:layout_centerHorizontal="true"
+	        android:layout_centerVertical="true"
+	        android:layout_centerInParent="true"
+	        android:indeterminate="true" />
+		    
+	</RelativeLayout>
 	
-	<FrameLayout android:id="@+id/second_pane"
+	<RelativeLayout android:id="@+id/second_pane"
 	    android:layout_width="0dp"
 	    android:layout_weight="2"
-	    android:layout_height="match_parent" />
+	    android:layout_height="match_parent" >
+	    
+	    <ProgressBar android:id="@+id/second_progressbar"
+	        android:layout_width="wrap_content"
+	        android:layout_height="wrap_content"
+	        android:layout_centerHorizontal="true"
+	        android:layout_centerVertical="true"
+	        android:layout_centerInParent="true"
+	        android:indeterminate="true" />
+		    
+	</RelativeLayout>
 	
 </LinearLayout>
