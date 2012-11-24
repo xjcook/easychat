@@ -8,14 +8,14 @@ import org.jivesoftware.smack.XMPPException;
 
 import android.util.Log;
 
-public class EasyChatManager {
+public class ChatManager {
 	
 	private static final String TAG = "EasyChatManager";
 	private static final String SERVER = "chat.facebook.com";
 	private static final Integer PORT = 5222;
 	private XMPPConnection xmpp;
 	
-	public EasyChatManager() {
+	public ChatManager() {
 		ConnectionConfiguration config = new ConnectionConfiguration(SERVER, PORT);
 		config.setDebuggerEnabled(false);
 		config.setSASLAuthenticationEnabled(true);

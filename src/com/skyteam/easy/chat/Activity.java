@@ -14,6 +14,7 @@ import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
+import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.util.Log;
 import android.view.Menu;
@@ -28,42 +29,47 @@ import com.facebook.android.Facebook;
 import com.facebook.android.Facebook.DialogListener;
 import com.facebook.android.FacebookError;
 import com.google.gson.Gson;
+import com.skyteam.easy.chat.MessagesFragment.MessagesFragmentListener;
+import com.skyteam.easy.chat.PeopleFragment.PeopleFragmentListener;
 
-public class EasyChatActivity extends FragmentActivity {
+public class Activity extends FragmentActivity 
+    implements PeopleFragmentListener, MessagesFragmentListener {
     
     private static final String TAG = "EasyChatActivity";    
     private static final String APPID = "424998287563509";
     private static final String[] PERMISSIONS = {"xmpp_login", "read_mailbox"};
     private static final int SLEEPTIME = 500;
-    private EasyChatManager mChat = new EasyChatManager();
+    private ChatManager mChat = new ChatManager();
     private Facebook facebook = new Facebook(APPID);
     private AsyncFacebookRunner mAsyncRunner = new AsyncFacebookRunner(facebook);
     private SharedPreferences mPrefs;    
     private PeopleFragment peopleFragment;
     private MessagesFragment messagesFragment;
     private ConversationFragment conversationFragment;
+    private boolean mDualPane;
     
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.easychat);
+        setContentView(R.layout.easychat_activity);
             
         facebookLogin();
         
         /* Load Fragments */
+        View secondPane = findViewById(R.id.second_pane);
+        mDualPane = secondPane != null && secondPane.getVisibility() == View.VISIBLE;
+        
         FragmentTransaction transaction = getSupportFragmentManager()
                 .beginTransaction();
         
-        if (findViewById(R.id.first_pane) != null) {
+        if (mDualPane) {
             peopleFragment = new PeopleFragment();
-            transaction.add(R.id.first_pane, peopleFragment);
-            new ShowPeopleTask().execute();
-        }
-        
-        if (findViewById(R.id.second_pane) != null) {
             messagesFragment = new MessagesFragment();
-            transaction.add(R.id.second_pane, messagesFragment);
-            new ShowMessagesTask().execute();
+            transaction.add(R.id.first_pane, peopleFragment, "people");
+            transaction.add(R.id.second_pane, messagesFragment, "messages");
+        } else {
+            peopleFragment = new PeopleFragment();
+            transaction.add(R.id.first_pane, peopleFragment, "people");
         }
         
         transaction.commit();
@@ -83,11 +89,10 @@ public class EasyChatActivity extends FragmentActivity {
     @Override
     public void onDestroy() {
         super.onDestroy();
-        //mChat.logout();
         
         if (isFinishing()) {
             mChat.logout();
-            facebookLogout();
+            //facebookLogout();
         }
     }
     
@@ -123,21 +128,33 @@ public class EasyChatActivity extends FragmentActivity {
     
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
+        FragmentTransaction transaction;
+
         switch (item.getItemId()) {
         
         // Show people
-        case R.id.menu_people:
-            if (findViewById(R.id.first_pane) != null) {
-                new ShowPeopleTask().execute();
-            }
+        case R.id.menu_people:   
+            peopleFragment = new PeopleFragment();             
+            transaction = getSupportFragmentManager().beginTransaction();                
+            transaction.replace(R.id.first_pane, peopleFragment, "people");            
+            transaction.addToBackStack(null);
+            transaction.commit();
             
             return true;
             
         // Show messages
         case R.id.menu_messages:
-            if (findViewById(R.id.second_pane) != null) {
-                new ShowMessagesTask().execute();
+            messagesFragment = new MessagesFragment();  
+            transaction = getSupportFragmentManager().beginTransaction();                
+            
+            if (mDualPane) {
+                transaction.replace(R.id.second_pane, messagesFragment, "messages");
+            } else {
+                transaction.replace(R.id.first_pane, messagesFragment, "messages");
             }
+            
+            transaction.addToBackStack(null);
+            transaction.commit();
             
             return true;
             
@@ -162,12 +179,9 @@ public class EasyChatActivity extends FragmentActivity {
             mChat.logout();  
             
             // Clear fragments
-            if (peopleFragment != null)
-                peopleFragment.clear();
-            if (messagesFragment != null)
-                messagesFragment.clear();
-            if (conversationFragment != null)
-                conversationFragment.clear();
+            peopleFragment.clear();
+            messagesFragment.clear();
+            conversationFragment.clear();
             
             return true;
         
@@ -187,6 +201,16 @@ public class EasyChatActivity extends FragmentActivity {
             return super.onOptionsItemSelected(item);
             
         }
+    }
+    
+    @Override
+    public void onPeopleFragmentCreated() {
+        new ShowPeopleTask().execute();
+    }
+    
+    @Override
+    public void onMessagesFragmentCreated() {
+        new ShowMessagesTask().execute();
     }
     
     private void facebookLogin() {
@@ -291,13 +315,13 @@ public class EasyChatActivity extends FragmentActivity {
         @Override
         protected void onPreExecute() {
             progressBar = (ProgressBar) findViewById(R.id.first_progressbar);
-            progressBar.setVisibility(View.VISIBLE);            
+            progressBar.setVisibility(View.VISIBLE);
         }
 
         @Override
-        protected Collection<RosterEntry> doInBackground(Void... params) {
-            try {
-                for (;;) {
+        protected Collection<RosterEntry> doInBackground(Void... params) {            
+            for (;;) {
+                try {
                     if (isCancelled()) {
                         return null;
                     }
@@ -325,33 +349,27 @@ public class EasyChatActivity extends FragmentActivity {
             
                     Log.v(TAG, "Sleeping ShowPeopleTask...");
                     Thread.sleep(SLEEPTIME);
-                }                                
-            } catch (XMPPException e) {
-                /* TODO show retry button */
-                Log.e(TAG, Log.getStackTraceString(e));
-                cancel(true);
-            } catch (InterruptedException e) {
-                Log.e(TAG, Log.getStackTraceString(e));
-                cancel(true);
-            }
-            
-            return null;
+                } catch (XMPPException e) {
+                    /* TODO show retry button */
+                    Log.e(TAG, Log.getStackTraceString(e));
+                    cancel(true);
+                } catch (InterruptedException e) {
+                    Log.e(TAG, Log.getStackTraceString(e));
+                    cancel(true);
+                }
+            }                                            
         }
         
         @Override
         protected void onPostExecute(Collection<RosterEntry> entries) {    
             progressBar.setVisibility(View.GONE);
-            
-            if (entries != null) {
-                peopleFragment.show(entries);
-            } else {
-                peopleFragment.clear();
-            }
+            peopleFragment.show(entries);
         }
         
         @Override
         protected void onCancelled(Collection<RosterEntry> entries) {
             progressBar.setVisibility(View.GONE);
+            peopleFragment.clear();
             mChat.logout();
         }
         
@@ -378,8 +396,8 @@ public class EasyChatActivity extends FragmentActivity {
 
         @Override
         protected FacebookThread doInBackground(Void... params) {
-            try {
-                for (;;) {
+            for (;;) {
+                try {
                     if (isCancelled()) {
                         return null;
                     }
@@ -439,7 +457,7 @@ public class EasyChatActivity extends FragmentActivity {
                                 return fbThread;
                             } else {
                                 Log.v(TAG, "FacebookThread is empty");
-                                return null;
+                                cancel(true);
                             }
                         }
                     } else {
@@ -449,29 +467,23 @@ public class EasyChatActivity extends FragmentActivity {
         
                     Log.v(TAG, "Sleeping ShowMessagesTask...");
                     Thread.sleep(SLEEPTIME);
+                } catch (InterruptedException e) {
+                    Log.e(TAG, Log.getStackTraceString(e));
+                    cancel(true);
                 }
-            } catch (InterruptedException e) {
-                Log.e(TAG, Log.getStackTraceString(e));
-                cancel(true);
-            }
-            
-            return null;
+            }  
         }
         
         @Override
         protected void onPostExecute(FacebookThread fbThread) {      
             progressBar.setVisibility(View.GONE);
-            
-            if (fbThread != null) {
-                messagesFragment.show(fbThread);
-            } else {
-                messagesFragment.clear();
-            }
+            messagesFragment.show(fbThread);
         }
         
         @Override
         protected void onCancelled(FacebookThread fbThread) {
             progressBar.setVisibility(View.GONE);
+            messagesFragment.clear();
         }
         
     }

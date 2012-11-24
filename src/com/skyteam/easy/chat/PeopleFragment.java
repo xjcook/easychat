@@ -4,6 +4,7 @@ import java.util.Collection;
 
 import org.jivesoftware.smack.RosterEntry;
 
+import android.app.Activity;
 import android.os.Bundle;
 import android.support.v4.app.ListFragment;
 import android.view.View;
@@ -11,11 +12,25 @@ import android.widget.ListView;
 import android.widget.Toast;
 
 public class PeopleFragment extends ListFragment {
+    
+    PeopleFragmentListener mListener;
+    
+    @Override
+    public void onAttach(Activity activity) {
+        super.onAttach(activity);
+        try {
+            mListener = (PeopleFragmentListener) activity;
+        } catch (ClassCastException e) {
+            throw new ClassCastException(activity.toString() 
+                    + " must implement PeopleFragmentListener");
+        }
+    }
 
 	@Override
 	public void onActivityCreated(Bundle savedInstanceState) {
 		super.onActivityCreated(savedInstanceState);
 		setListAdapter(null);
+		mListener.onPeopleFragmentCreated();
 	}
 
 	@Override
@@ -26,12 +41,16 @@ public class PeopleFragment extends ListFragment {
     			Toast.LENGTH_LONG).show();
 	}
 	
+    public interface PeopleFragmentListener {
+        public void onPeopleFragmentCreated();
+    }
+	
 	public void show(Collection<RosterEntry> entries) {
 		setListAdapter(new PeopleAdapter(getActivity(), entries
 				.toArray(new RosterEntry[entries.size()])));
 	}
-	
-	public void clear() {
+
+    public void clear() {
 		setListAdapter(null);
 	}
 	
