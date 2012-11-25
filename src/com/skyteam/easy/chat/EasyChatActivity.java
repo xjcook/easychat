@@ -32,7 +32,7 @@ import com.google.gson.Gson;
 import com.skyteam.easy.chat.MessagesFragment.MessagesFragmentListener;
 import com.skyteam.easy.chat.PeopleFragment.PeopleFragmentListener;
 
-public class Activity extends FragmentActivity 
+public class EasyChatActivity extends FragmentActivity 
     implements PeopleFragmentListener, MessagesFragmentListener {
     
     private static final String TAG = "EasyChatActivity";    
@@ -314,8 +314,12 @@ public class Activity extends FragmentActivity
         
         @Override
         protected void onPreExecute() {
-            progressBar = (ProgressBar) findViewById(R.id.first_progressbar);
-            progressBar.setVisibility(View.VISIBLE);
+            if (peopleFragment != null) {
+                progressBar = (ProgressBar) findViewById(R.id.first_progressbar);
+                progressBar.setVisibility(View.VISIBLE);
+            } else {
+                cancel(true);
+            }
         }
 
         @Override
@@ -368,9 +372,11 @@ public class Activity extends FragmentActivity
         
         @Override
         protected void onCancelled(Collection<RosterEntry> entries) {
-            progressBar.setVisibility(View.GONE);
-            peopleFragment.clear();
-            mChat.logout();
+            if (peopleFragment != null) {
+                progressBar.setVisibility(View.GONE);
+                peopleFragment.clear();
+                mChat.logout();
+            }
         }
         
     }
@@ -384,14 +390,18 @@ public class Activity extends FragmentActivity
         
         @Override
         protected void onPreExecute() {
-            // if dual view
-            if (findViewById(R.id.second_pane) != null) {
-                progressBar = (ProgressBar) findViewById(R.id.second_progressbar);
+            if (messagesFragment != null) {
+                // if dual view
+                if (findViewById(R.id.second_pane) != null) {
+                    progressBar = (ProgressBar) findViewById(R.id.second_progressbar);
+                } else {
+                    progressBar = (ProgressBar) findViewById(R.id.first_progressbar);
+                }
+                
+                progressBar.setVisibility(View.VISIBLE);
             } else {
-                progressBar = (ProgressBar) findViewById(R.id.first_progressbar);
+                cancel(true);
             }
-            
-            progressBar.setVisibility(View.VISIBLE);
         }
 
         @Override
@@ -482,8 +492,10 @@ public class Activity extends FragmentActivity
         
         @Override
         protected void onCancelled(FacebookThread fbThread) {
-            progressBar.setVisibility(View.GONE);
-            messagesFragment.clear();
+            if (messagesFragment != null) {
+                progressBar.setVisibility(View.GONE);
+                messagesFragment.clear();
+            }
         }
         
     }
