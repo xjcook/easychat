@@ -20,7 +20,9 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.EditText;
 import android.widget.ProgressBar;
+import android.widget.Toast;
 
 import com.facebook.android.AsyncFacebookRunner;
 import com.facebook.android.AsyncFacebookRunner.RequestListener;
@@ -179,9 +181,12 @@ public class EasyChatActivity extends FragmentActivity
             mChat.logout();  
             
             // Clear fragments
-            peopleFragment.clear();
-            messagesFragment.clear();
-            conversationFragment.clear();
+            if (peopleFragment != null)
+                peopleFragment.clear();
+            if (messagesFragment != null)
+                messagesFragment.clear();
+            if (conversationFragment != null)
+                conversationFragment.clear();
             
             return true;
         
@@ -243,6 +248,13 @@ public class EasyChatActivity extends FragmentActivity
         
         transaction.addToBackStack(null);
         transaction.commit();
+    }
+    
+    // Called by MessagesFragment
+    public void sendMessage(View button) {
+        EditText editText = (EditText) findViewById(R.id.message_edittext);
+        String message = editText.getText().toString();
+        Toast.makeText(this, message, Toast.LENGTH_LONG).show();
     }
     
     private void facebookLogin() {

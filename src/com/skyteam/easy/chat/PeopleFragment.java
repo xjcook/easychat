@@ -42,11 +42,6 @@ public class PeopleFragment extends ListFragment {
     	mListener.onPeopleSelected(entry);
 	}
 	
-    public interface PeopleFragmentListener {
-        public void onPeopleFragmentCreated();
-        public void onPeopleSelected(RosterEntry entry);
-    }
-	
 	public void show(Collection<RosterEntry> entries) {
 		setListAdapter(new PeopleAdapter(getActivity(), entries
 				.toArray(new RosterEntry[entries.size()])));
@@ -55,5 +50,10 @@ public class PeopleFragment extends ListFragment {
     public void clear() {
 		setListAdapter(null);
 	}
+    
+    public interface PeopleFragmentListener {
+        public void onPeopleFragmentCreated();
+        public void onPeopleSelected(RosterEntry entry);
+    }
 	
 }

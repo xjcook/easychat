@@ -8,5 +8,6 @@
     <string name="menu_exit">Exit</string>
     <string name="menu_people">People</string>
     <string name="menu_messages">Messages</string>
-
+    <string name="button_send_message">Send</string>
+    
 </resources>

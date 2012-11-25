@@ -38,11 +38,6 @@ public class MessagesFragment extends ListFragment {
     	mListener.onMessageSelected(data);
 	}
 	
-	public interface MessagesFragmentListener {
-        public void onMessagesFragmentCreated();
-        public void onMessageSelected(FacebookData data);
-    }
-	
 	public void show(FacebookThread fbThread) {
 		setListAdapter(new MessagesAdapter(getActivity(), fbThread.getData()));
 	}
@@ -50,5 +45,10 @@ public class MessagesFragment extends ListFragment {
 	public void clear() {
 		setListAdapter(null);
 	}
+	
+	public interface MessagesFragmentListener {
+        public void onMessagesFragmentCreated();
+        public void onMessageSelected(FacebookData data);
+    }
 
 }

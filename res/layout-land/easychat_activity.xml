@@ -2,13 +2,12 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="horizontal"
     android:baselineAligned="false" >
     
 	<RelativeLayout android:id="@+id/first_pane"
 	    android:layout_width="0dp"
-	    android:layout_weight="1"
-	    android:layout_height="match_parent" >
+	    android:layout_height="match_parent"
+        android:layout_weight="1" >
 	    
 	    <ProgressBar android:id="@+id/first_progressbar"
 	        android:layout_width="wrap_content"
@@ -22,8 +21,8 @@
 	
 	<RelativeLayout android:id="@+id/second_pane"
 	    android:layout_width="0dp"
-	    android:layout_weight="2"
-	    android:layout_height="match_parent" >
+	    android:layout_height="match_parent" 
+        android:layout_weight="2" >
 	    
 	    <ProgressBar android:id="@+id/second_progressbar"
 	        android:layout_width="wrap_content"
