@@ -35,10 +35,12 @@ public class MessagesFragment extends ListFragment {
 		FacebookData data = (FacebookData) getListAdapter().getItem(position);
     	Toast.makeText(getActivity(), data.getThreadId() + " selected", 
     			Toast.LENGTH_LONG).show();
+    	mListener.onMessageSelected(data);
 	}
 	
 	public interface MessagesFragmentListener {
         public void onMessagesFragmentCreated();
+        public void onMessageSelected(FacebookData data);
     }
 	
 	public void show(FacebookThread fbThread) {

@@ -209,8 +209,40 @@ public class EasyChatActivity extends FragmentActivity
     }
     
     @Override
+    public void onPeopleSelected(RosterEntry entry) {
+        conversationFragment = new ConversationFragment();
+        FragmentTransaction transaction = getSupportFragmentManager()
+                .beginTransaction();
+        
+        if (mDualPane) {
+            transaction.replace(R.id.second_pane, conversationFragment);
+        } else {
+            transaction.replace(R.id.first_pane, conversationFragment);
+        }
+        
+        transaction.addToBackStack(null);
+        transaction.commit();
+    }
+    
+    @Override
     public void onMessagesFragmentCreated() {
         new ShowMessagesTask().execute();
+    }
+    
+    @Override
+    public void onMessageSelected(FacebookData data) {
+        conversationFragment = new ConversationFragment();
+        FragmentTransaction transaction = getSupportFragmentManager()
+                .beginTransaction();
+        
+        if (mDualPane) {
+            transaction.replace(R.id.second_pane, conversationFragment);
+        } else {
+            transaction.replace(R.id.first_pane, conversationFragment);
+        }
+        
+        transaction.addToBackStack(null);
+        transaction.commit();
     }
     
     private void facebookLogin() {
@@ -376,6 +408,8 @@ public class EasyChatActivity extends FragmentActivity
                 progressBar.setVisibility(View.GONE);
                 peopleFragment.clear();
                 mChat.logout();
+            } else {
+                Log.v(TAG, "peopleFragment == null");
             }
         }
         
@@ -495,6 +529,8 @@ public class EasyChatActivity extends FragmentActivity
             if (messagesFragment != null) {
                 progressBar.setVisibility(View.GONE);
                 messagesFragment.clear();
+            } else {
+                Log.v(TAG, "messagesFragment == null");
             }
         }
         

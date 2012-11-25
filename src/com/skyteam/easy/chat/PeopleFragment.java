@@ -39,10 +39,12 @@ public class PeopleFragment extends ListFragment {
 		RosterEntry entry = (RosterEntry) getListAdapter().getItem(position);
     	Toast.makeText(getActivity(), entry.getName() + " selected", 
     			Toast.LENGTH_LONG).show();
+    	mListener.onPeopleSelected(entry);
 	}
 	
     public interface PeopleFragmentListener {
         public void onPeopleFragmentCreated();
+        public void onPeopleSelected(RosterEntry entry);
     }
 	
 	public void show(Collection<RosterEntry> entries) {
