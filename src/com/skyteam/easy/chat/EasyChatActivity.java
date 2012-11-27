@@ -41,7 +41,7 @@ public class EasyChatActivity extends FragmentActivity
     private static final String APPID = "424998287563509";
     private static final String[] PERMISSIONS = {"xmpp_login", "read_mailbox"};
     private static final int SLEEPTIME = 500;
-    private EasyChatManager mChat = new EasyChatManager();
+    private EasyChatManager mChatManager = new EasyChatManager();
     private Facebook facebook = new Facebook(APPID);
     private AsyncFacebookRunner mAsyncRunner = new AsyncFacebookRunner(facebook);
     private SharedPreferences mPrefs;    
@@ -56,6 +56,13 @@ public class EasyChatActivity extends FragmentActivity
         setContentView(R.layout.easychat_activity);
             
         facebookLogin();
+        
+        // Connect to XMPP server
+        try {
+            mChatManager.connect();
+        } catch (XMPPException e) {
+            Log.e(TAG, Log.getStackTraceString(e));
+        }
         
         /* Load Fragments */
         View secondPane = findViewById(R.id.second_pane);
@@ -93,7 +100,7 @@ public class EasyChatActivity extends FragmentActivity
         super.onDestroy();
         
         if (isFinishing()) {
-            mChat.logout();
+            mChatManager.disconnect();
             //facebookLogout();
         }
     }
@@ -152,7 +159,7 @@ public class EasyChatActivity extends FragmentActivity
         case R.id.menu_logout:
             // Chat & Facebook logout 
             facebookLogout();
-            mChat.logout();  
+            mChatManager.disconnect();  
             
             // Clear fragments
             if (peopleFragment != null)
@@ -230,8 +237,8 @@ public class EasyChatActivity extends FragmentActivity
         String message = editText.getText().toString();
         Toast.makeText(this, message, Toast.LENGTH_LONG).show();
         try {
-            mChat.sendMessage(message, conversationFragment
-                    .getArguments().getString("user"));
+            mChatManager.sendMessage(conversationFragment
+                    .getArguments().getString("user"), message);
         } catch (XMPPException e) {
             // TODO Auto-generated catch block
             Log.e(TAG, Log.getStackTraceString(e));
@@ -355,10 +362,10 @@ public class EasyChatActivity extends FragmentActivity
                         return null;
                     }
                     
-                    if (facebook.isSessionValid() && mChat.isAuthenticated()) {
+                    if (facebook.isSessionValid() && mChatManager.isAuthenticated()) {
                         Log.v(TAG, "Authorized & Connected!");
                 
-                        Collection<RosterEntry> entries = mChat.getRoster()
+                        Collection<RosterEntry> entries = mChatManager.getRoster()
                                 .getEntries();
                         
                         if (! entries.isEmpty()) {
@@ -369,7 +376,7 @@ public class EasyChatActivity extends FragmentActivity
                     } else {
                         if (facebook.isSessionValid()) {
                             Log.v(TAG, "Not connected!");
-                            mChat.login(APPID, facebook.getAccessToken());
+                            mChatManager.login(APPID, facebook.getAccessToken());
                         } else {
                             Log.v(TAG, "Not authorized!");
                             Log.v(TAG, "Token: " + facebook.getAccessToken());
@@ -400,7 +407,7 @@ public class EasyChatActivity extends FragmentActivity
             if (peopleFragment != null) {
                 progressBar.setVisibility(View.GONE);
                 peopleFragment.clear();
-                mChat.logout();
+                mChatManager.disconnect();
             } else {
                 Log.v(TAG, "peopleFragment == null");
             }

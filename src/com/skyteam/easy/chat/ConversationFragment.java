@@ -1,7 +1,5 @@
 package com.skyteam.easy.chat;
 
-import com.skyteam.easy.chat.EasyChatManager.EasyChatListener;
-
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.util.Log;
@@ -11,7 +9,7 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
-public class ConversationFragment extends Fragment implements EasyChatListener {
+public class ConversationFragment extends Fragment {
 
     private static final String TAG = "ConversationFragment";
     private ListView listView;
@@ -43,11 +41,5 @@ public class ConversationFragment extends Fragment implements EasyChatListener {
 	    
 	    return conversationFragment;
 	}
-
-    @Override
-    public void showMessage(String msg) {
-        adapter.add(msg);
-        listView.setAdapter(adapter);
-    }	
 	
 }

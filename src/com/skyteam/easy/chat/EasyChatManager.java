@@ -19,7 +19,6 @@ public class EasyChatManager {
 	private static final String SERVER = "chat.facebook.com";
 	private static final Integer PORT = 5222;
 	private XMPPConnection xmpp;
-	private EasyChatListener mListener;
 	
 	public EasyChatManager() {
 		ConnectionConfiguration config = new ConnectionConfiguration(SERVER, PORT);
@@ -28,35 +27,35 @@ public class EasyChatManager {
 		xmpp = new XMPPConnection(config);
 	}
 	
-	public void login(String appID, String accessToken) throws XMPPException {		
-		SASLAuthentication.registerSASLMechanism("X-FACEBOOK-PLATFORM", 
-				SASLXFacebookPlatformMechanism.class);
-	    SASLAuthentication.supportSASLMechanism("X-FACEBOOK-PLATFORM", 0);
-	    
-	    if (! xmpp.isConnected()) {
-	    	xmpp.connect();
-	    }
-	    
+	public void connect() throws XMPPException {
+	    SASLAuthentication.registerSASLMechanism("X-FACEBOOK-PLATFORM", 
+                SASLXFacebookPlatformMechanism.class);
+        SASLAuthentication.supportSASLMechanism("X-FACEBOOK-PLATFORM", 0);
+        
+        xmpp.connect();
+	}
+	
+	public void disconnect() {
+        xmpp.disconnect();
+    }
+	
+	public void login(String appID, String accessToken) throws XMPPException {			    
 	    xmpp.login(appID, accessToken, "Easy Chat");
 	}
 	
-	public void logout() {
-		xmpp.disconnect();
-	}
-	
-	public void sendMessage(String message, String user) throws XMPPException {
+	public void sendMessage(String user, String message) throws XMPPException {
 	    ChatManager chatManager = xmpp.getChatManager();
-	    Chat newChat = chatManager.createChat(user, new MessageListener() {
+	    Chat chat = chatManager.createChat(user, new MessageListener() {
             
             @Override
             public void processMessage(Chat chat, Message msg) {
                 // TODO Auto-generated method stub
-                mListener.showMessage(msg.toString());
+                //mListener.showMessage(msg.toString());
             }
             
         });
 	    
-        newChat.sendMessage(message);
+        chat.sendMessage(message);
 	}
 	
 	public boolean isAuthenticated() {
@@ -67,7 +66,4 @@ public class EasyChatManager {
 		return xmpp.getRoster();
 	}
 	
-	public interface EasyChatListener {
-	    public void showMessage(String msg);
-	}
 }
