@@ -1,8 +1,4 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:id="@+id/menu_people"
-        android:title="@string/menu_people" />
-    <item android:id="@+id/menu_messages"
-        android:title="@string/menu_messages" />
     <item android:id="@+id/menu_login" 
         android:title="@string/menu_login" />
     <item android:id="@+id/menu_logout" 

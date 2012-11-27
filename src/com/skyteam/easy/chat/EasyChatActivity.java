@@ -41,7 +41,7 @@ public class EasyChatActivity extends FragmentActivity
     private static final String APPID = "424998287563509";
     private static final String[] PERMISSIONS = {"xmpp_login", "read_mailbox"};
     private static final int SLEEPTIME = 500;
-    private ChatManager mChat = new ChatManager();
+    private EasyChatManager mChat = new EasyChatManager();
     private Facebook facebook = new Facebook(APPID);
     private AsyncFacebookRunner mAsyncRunner = new AsyncFacebookRunner(facebook);
     private SharedPreferences mPrefs;    
@@ -133,32 +133,6 @@ public class EasyChatActivity extends FragmentActivity
         FragmentTransaction transaction;
 
         switch (item.getItemId()) {
-        
-        // Show people
-        case R.id.menu_people:   
-            peopleFragment = new PeopleFragment();             
-            transaction = getSupportFragmentManager().beginTransaction();                
-            transaction.replace(R.id.first_pane, peopleFragment, "people");            
-            transaction.addToBackStack(null);
-            transaction.commit();
-            
-            return true;
-            
-        // Show messages
-        case R.id.menu_messages:
-            messagesFragment = new MessagesFragment();  
-            transaction = getSupportFragmentManager().beginTransaction();                
-            
-            if (mDualPane) {
-                transaction.replace(R.id.second_pane, messagesFragment, "messages");
-            } else {
-                transaction.replace(R.id.first_pane, messagesFragment, "messages");
-            }
-            
-            transaction.addToBackStack(null);
-            transaction.commit();
-            
-            return true;
             
         // Log In
         case R.id.menu_login:
@@ -215,7 +189,7 @@ public class EasyChatActivity extends FragmentActivity
     
     @Override
     public void onPeopleSelected(RosterEntry entry) {
-        conversationFragment = new ConversationFragment();
+        conversationFragment = ConversationFragment.newInstance(entry.getUser());
         FragmentTransaction transaction = getSupportFragmentManager()
                 .beginTransaction();
         
@@ -255,6 +229,13 @@ public class EasyChatActivity extends FragmentActivity
         EditText editText = (EditText) findViewById(R.id.message_edittext);
         String message = editText.getText().toString();
         Toast.makeText(this, message, Toast.LENGTH_LONG).show();
+        try {
+            mChat.sendMessage(message, conversationFragment
+                    .getArguments().getString("user"));
+        } catch (XMPPException e) {
+            // TODO Auto-generated catch block
+            Log.e(TAG, Log.getStackTraceString(e));
+        }
     }
     
     private void facebookLogin() {
