@@ -39,8 +39,8 @@ public class EasyChatManager {
         xmpp.disconnect();
     }
 	
-	public void login(String appID, String accessToken) throws XMPPException {			    
-	    xmpp.login(appID, accessToken, "Easy Chat");
+	public void login(String appId, String accessToken) throws XMPPException {			    
+	    xmpp.login(appId, accessToken, "Easy Chat");
 	}
 	
 	public void sendMessage(String user, String message) throws XMPPException {
@@ -56,6 +56,10 @@ public class EasyChatManager {
         });
 	    
         chat.sendMessage(message);
+	}
+	
+	public boolean isConnected() {
+	    return xmpp.isConnected();
 	}
 	
 	public boolean isAuthenticated() {
