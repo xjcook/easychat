@@ -11,7 +11,6 @@ import com.facebook.android.FacebookError;
 import com.facebook.android.AsyncFacebookRunner.RequestListener;
 import com.google.gson.Gson;
 
-import android.app.Activity;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.ListFragment;
@@ -22,22 +21,9 @@ import android.widget.Toast;
 
 public class MessagesFragment extends ListFragment {
     
-    private static final String TAG = "MessagesFragment";
-    private static final int SLEEP_TIME = 500;
+    public static final String TAG = "MessagesFragment";
     private Facebook facebook = new Facebook(FacebookHelper.APPID);
     private AsyncFacebookRunner mAsyncRunner = new AsyncFacebookRunner(facebook);
-    private MessagesFragmentListener mListener;  
-    
-    @Override
-    public void onAttach(Activity activity) {
-        super.onAttach(activity);
-        try {
-            mListener = (MessagesFragmentListener) activity;
-        } catch (ClassCastException e) {
-            throw new ClassCastException(activity.toString() 
-                    + " must implement MessagesFragmentListener");
-        }
-    }
 	
 	@Override
 	public void onActivityCreated(Bundle savedInstanceState) {
@@ -51,7 +37,7 @@ public class MessagesFragment extends ListFragment {
 		FacebookData data = (FacebookData) getListAdapter().getItem(position);
     	Toast.makeText(getActivity(), data.getThreadId() + " selected", 
     			Toast.LENGTH_LONG).show();
-    	mListener.onMessageSelected(data);
+    	showConversation();
 	}
 	
 	public void show(FacebookThread fbThread) {
@@ -62,13 +48,14 @@ public class MessagesFragment extends ListFragment {
 		setListAdapter(null);
 	}
 	
-	public interface MessagesFragmentListener {
-        public void onMessageSelected(FacebookData data);
-    }
+	private void showConversation() {
+	    
+	}
 	
 	private class ShowMessagesTask extends AsyncTask<Void, Void, FacebookThread> {
         
         private static final String TAG = "ShowMessagesTask";
+        private static final int SLEEP_TIME = 500;
         private FacebookThread fbThread = null;
 
         @Override

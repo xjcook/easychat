@@ -11,7 +11,8 @@ import android.widget.ListView;
 
 public class ConversationFragment extends Fragment {
 
-    private static final String TAG = "ConversationFragment";
+    public static final String TAG = "ConversationFragment";
+    public static final String USER = "user";
     private ListView listView;
     private ArrayAdapter<String> adapter;
     
@@ -27,19 +28,27 @@ public class ConversationFragment extends Fragment {
 		listView = (ListView) getActivity().findViewById(R.id.messages_listview);
 		adapter = new ArrayAdapter<String>(getActivity(), android.R.layout.simple_list_item_1, android.R.id.text1);
 	}
+    
+    public static ConversationFragment newInstance(String user) {
+        ConversationFragment conversationFragment = new ConversationFragment();
+        
+        Bundle args = new Bundle();
+        args.putString(USER, user);
+        conversationFragment.setArguments(args);
+        
+        return conversationFragment;
+    }
+    
+    public void sendMessage() {
+        Log.v(TAG, "sendMessage()");
+    }
+    
+    public void show() {
+        
+    }
 	
 	public void clear() {
 		
-	}
-
-	public static ConversationFragment newInstance(String user) {
-	    ConversationFragment conversationFragment = new ConversationFragment();
-	    
-	    Bundle args = new Bundle();
-	    args.putString("user", user);
-	    conversationFragment.setArguments(args);
-	    
-	    return conversationFragment;
 	}
 	
 }

@@ -20,8 +20,7 @@ import com.facebook.android.Facebook.DialogListener;
 
 public class FacebookHelper {
     
-    private static final String TAG = "FacebookHelper";
-    
+    public static final String TAG = "FacebookHelper";
     public static final String APPID = "424998287563509";
     public static final String[] PERMISSIONS = {"xmpp_login", "read_mailbox"};
     private static final String TOKEN = "access_token";

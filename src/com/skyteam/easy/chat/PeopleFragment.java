@@ -5,7 +5,6 @@ import java.util.Collection;
 import org.jivesoftware.smack.RosterEntry;
 import org.jivesoftware.smack.XMPPException;
 
-import android.app.Activity;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -13,6 +12,7 @@ import android.content.ServiceConnection;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v4.app.ListFragment;
 import android.util.Log;
 import android.view.View;
@@ -24,10 +24,9 @@ import com.skyteam.easy.chat.ChatService.LocalBinder;
 
 public class PeopleFragment extends ListFragment {
     
-    private static final String TAG = "PeopleFragment";
-    private static final int SLEEP_TIME = 500;
-    private Facebook facebook = new Facebook(FacebookHelper.APPID);
-    private PeopleFragmentListener mListener;  
+    public static final String TAG = "PeopleFragment";
+    private final Facebook facebook = new Facebook(FacebookHelper.APPID);
+    private boolean mDualPane;
     
     /* Chat Service */
     private boolean mIsBound;
@@ -44,27 +43,21 @@ public class PeopleFragment extends ListFragment {
         @Override
         public void onServiceDisconnected(ComponentName name) {
             Log.e(TAG, "onServiceDisconnected");
+            mChatService = null;
             mIsBound = false;
         }
      
     };
-    
-    @Override
-    public void onAttach(Activity activity) {
-        super.onAttach(activity);
-        try {
-            mListener = (PeopleFragmentListener) activity;
-        } catch (ClassCastException e) {
-            throw new ClassCastException(activity.toString() 
-                    + " must implement PeopleFragmentListener");
-        }
-    }
 
     @Override
 	public void onActivityCreated(Bundle savedInstanceState) {
 		super.onActivityCreated(savedInstanceState);
         bindToChatService();
         new ShowPeopleTask().execute();
+        
+        // Check dualView
+        View messagesFrame = getActivity().findViewById(R.id.messages);
+        mDualPane = messagesFrame != null && messagesFrame.getVisibility() == View.VISIBLE;
 	}
     
     @Override
@@ -79,7 +72,7 @@ public class PeopleFragment extends ListFragment {
 		RosterEntry entry = (RosterEntry) getListAdapter().getItem(position);
     	Toast.makeText(getActivity(), entry.getName() + " selected", 
     			Toast.LENGTH_LONG).show();
-    	mListener.onPeopleSelected(entry);
+    	showConversation(entry.getUser());
 	}
 	
 	public void show(Collection<RosterEntry> entries) {
@@ -101,18 +94,33 @@ public class PeopleFragment extends ListFragment {
         if (mIsBound) {
             // Detach our existing connection.
             getActivity().unbindService(mConnection);
-            mIsBound = false;
         }
     }
     
-    public interface PeopleFragmentListener {
-        public void onPeopleSelected(RosterEntry entry);
+    private void showConversation(String user) {
+        if (mDualPane) {
+            // Replace MessagesFragment to ConversationFragment
+            ConversationFragment conversationFragment = 
+                    ConversationFragment.newInstance(user); 
+            FragmentTransaction transaction = getActivity()
+                    .getSupportFragmentManager().beginTransaction();
+            transaction.replace(R.id.messages, conversationFragment, 
+                    ConversationFragment.TAG);
+            transaction.addToBackStack(null);
+            transaction.commit();
+        } else {
+            // Start new ConversationActivity
+            Intent intent = new Intent(getActivity(), ConversationActivity.class);
+            intent.putExtra(ConversationActivity.USER, user);
+            startActivity(intent);
+        }
     }
     
     private class ShowPeopleTask extends AsyncTask<Void, Void, Collection<RosterEntry>> {
         
         private static final String TAG = "ShowPeopleTask";
-
+        private static final int SLEEP_TIME = 500;
+        
         @Override
         protected Collection<RosterEntry> doInBackground(Void... params) {            
             for (;;) {

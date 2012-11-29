@@ -18,7 +18,7 @@ import android.util.Log;
 
 public class ChatService extends Service {
     
-    private static final String TAG = "EasyChatService";
+    public static final String TAG = "EasyChatService";
     private static final String SERVER = "chat.facebook.com";
     private static final Integer PORT = 5222;
     private XMPPConnection xmpp;

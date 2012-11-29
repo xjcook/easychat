@@ -1,27 +1,25 @@
 package com.skyteam.easy.chat;
 
-import org.jivesoftware.smack.RosterEntry;
-
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 
 import com.facebook.android.Facebook;
-import com.skyteam.easy.chat.MessagesFragment.MessagesFragmentListener;
-import com.skyteam.easy.chat.PeopleFragment.PeopleFragmentListener;
 
-public class MainActivity extends FragmentActivity 
-    implements PeopleFragmentListener, MessagesFragmentListener {
+public class MainActivity extends FragmentActivity {
 
-    private static final String TAG = "MainActivity";
+    public static final String TAG = "MainActivity";
     private final Facebook facebook = new Facebook(FacebookHelper.APPID);
     private final FacebookHelper mFacebookHelper = new FacebookHelper(this, facebook);
+    private boolean mDualPane;
     
     @Override
-    public void onCreate(Bundle saveInstanceState) {
-        super.onCreate(saveInstanceState);
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
         setContentView(R.layout.main_activity);
         
         // Log In to Facebook
@@ -30,6 +28,17 @@ public class MainActivity extends FragmentActivity
         // Start ChatService
         Intent intent = new Intent(this, ChatService.class);
         startService(intent);
+        
+        // Check dualView
+        View messagesFrame = findViewById(R.id.messages);
+        mDualPane = messagesFrame != null && messagesFrame.getVisibility() == View.VISIBLE;
+        
+        // If dual view then show MessagesFragment
+        if (mDualPane) {
+            MessagesFragment messagesFragment = new MessagesFragment();
+            getSupportFragmentManager().beginTransaction()
+                    .replace(R.id.messages, messagesFragment).commit();
+        }
     }
     
     @Override
@@ -135,16 +144,10 @@ public class MainActivity extends FragmentActivity
         }
     }
     
-    @Override
-    public void onPeopleSelected(RosterEntry entry) {
-        // TODO Auto-generated method stub
-        
-    }
-
-    @Override
-    public void onMessageSelected(FacebookData data) {
-        // TODO Auto-generated method stub
-        
-    }
+    public void onSendMessageButtonClick(View button) {
+        ConversationFragment f = (ConversationFragment) getSupportFragmentManager()
+                .findFragmentByTag(ConversationFragment.TAG);
+        f.sendMessage();
+    }  
     
 }
