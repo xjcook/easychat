@@ -93,7 +93,12 @@ public class ChatService extends Service {
             
             @Override
             public void processMessage(Chat chat, Message message) {
-                Log.v(TAG, "Received message: " + message);
+                String body = message.getBody();
+                
+                if (body != null) {
+                    Log.v(TAG, "Received message: " + body);
+            
+                }
             }
             
         });

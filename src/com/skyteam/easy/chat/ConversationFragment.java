@@ -42,8 +42,7 @@ public class ConversationFragment extends Fragment {
     
     public void sendMessage() {
         if (mIsBound) {
-            EditText editText = (EditText) getActivity()
-                    .findViewById(R.id.message_edittext);
+            EditText editText = (EditText) getActivity().findViewById(R.id.message_edittext);
             String user = getArguments().getString(USER);
             String message = editText.getText().toString();
             
