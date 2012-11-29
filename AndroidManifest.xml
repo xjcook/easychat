@@ -16,7 +16,7 @@
         android:theme="@style/AppTheme"
         android:allowBackup="True" >
         <activity
-            android:name=".EasyChatActivity"
+            android:name=".MainActivity"
             android:label="@string/title_activity_easychat" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -25,7 +25,8 @@
             </intent-filter>
         </activity>
         <service
-            android:name=".EasyChatService" >
+            android:name=".ChatService"
+            android:exported="false" >
         </service>
     </application>
 

@@ -18,7 +18,7 @@ public class PeopleAdapter extends ArrayAdapter<RosterEntry> {
 	}
 	
 	public PeopleAdapter(Context context, RosterEntry[] entries) {
-		super(context, R.layout.human_item, entries);
+		super(context, R.layout.people_item, entries);
 		this.context = context;
 		this.entries = entries;
 	}
@@ -31,9 +31,9 @@ public class PeopleAdapter extends ArrayAdapter<RosterEntry> {
 			//LayoutInflater inflater = context.getLayoutInflater();
 			LayoutInflater inflater = (LayoutInflater) context
 					.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-			rowView = inflater.inflate(R.layout.human_item, null);
+			rowView = inflater.inflate(R.layout.people_item, null);
 			ViewHolder viewHolder = new ViewHolder();
-			viewHolder.text = (TextView) rowView.findViewById(R.id.human_label);
+			viewHolder.text = (TextView) rowView.findViewById(R.id.people_label);
 			rowView.setTag(viewHolder);
 		}
 		

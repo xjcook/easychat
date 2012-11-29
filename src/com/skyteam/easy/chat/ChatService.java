@@ -16,7 +16,7 @@ import android.os.Binder;
 import android.os.IBinder;
 import android.util.Log;
 
-public class EasyChatService extends Service {
+public class ChatService extends Service {
     
     private static final String TAG = "EasyChatService";
     private static final String SERVER = "chat.facebook.com";
@@ -62,9 +62,9 @@ public class EasyChatService extends Service {
      * runs in the same process as its clients, we don't need to deal with IPC.
      */
     public class LocalBinder extends Binder {
-        EasyChatService getService() {
+        ChatService getService() {
             // Return this instance of LocalService so clients can call public methods
-            return EasyChatService.this;
+            return ChatService.this;
         }
     }
     
