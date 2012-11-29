@@ -15,11 +15,8 @@ import android.os.Bundle;
 import android.os.IBinder;
 import android.support.v4.app.ListFragment;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.ListView;
-import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import com.facebook.android.Facebook;
@@ -63,17 +60,9 @@ public class PeopleFragment extends ListFragment {
         }
     }
 
-//	@Override
-//    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-//            Bundle savedInstanceState) {
-//        // TODO Auto-generated method stub
-//        return super.onCreateView(inflater, container, savedInstanceState);
-//    }
-
     @Override
 	public void onActivityCreated(Bundle savedInstanceState) {
 		super.onActivityCreated(savedInstanceState);
-		setListAdapter(null);
         bindToChatService();
         new ShowPeopleTask().execute();
 	}
@@ -123,14 +112,6 @@ public class PeopleFragment extends ListFragment {
     private class ShowPeopleTask extends AsyncTask<Void, Void, Collection<RosterEntry>> {
         
         private static final String TAG = "ShowPeopleTask";
-        private ProgressBar progressBar;
-        
-        @Override
-        protected void onPreExecute() {            
-            /*progressBar = (ProgressBar) getActivity().findViewById(
-                    R.id.first_progressbar);
-            progressBar.setVisibility(View.VISIBLE);*/
-        }
 
         @Override
         protected Collection<RosterEntry> doInBackground(Void... params) {            
@@ -181,13 +162,11 @@ public class PeopleFragment extends ListFragment {
         
         @Override
         protected void onPostExecute(Collection<RosterEntry> entries) {
-            //progressBar.setVisibility(View.GONE);
             show(entries);
         }
         
         @Override
         protected void onCancelled(Collection<RosterEntry> entries) {
-            //progressBar.setVisibility(View.GONE);
             clear();
         }
         

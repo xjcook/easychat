@@ -10,24 +10,14 @@ import com.facebook.android.Facebook;
 import com.facebook.android.FacebookError;
 import com.facebook.android.AsyncFacebookRunner.RequestListener;
 import com.google.gson.Gson;
-import com.skyteam.easy.chat.ChatService.LocalBinder;
-import com.skyteam.easy.chat.PeopleFragment.PeopleFragmentListener;
 
 import android.app.Activity;
-import android.content.ComponentName;
-import android.content.Context;
-import android.content.Intent;
-import android.content.ServiceConnection;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.IBinder;
 import android.support.v4.app.ListFragment;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.ListView;
-import android.widget.ProgressBar;
 import android.widget.Toast;
 
 public class MessagesFragment extends ListFragment {
@@ -49,17 +39,9 @@ public class MessagesFragment extends ListFragment {
         }
     }
 	
-//    @Override
-//    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-//            Bundle savedInstanceState) {
-//        // TODO Auto-generated method stub
-//        return super.onCreateView(inflater, container, savedInstanceState);
-//    }
-    
 	@Override
 	public void onActivityCreated(Bundle savedInstanceState) {
 		super.onActivityCreated(savedInstanceState);
-		setListAdapter(null);
 	    new ShowMessagesTask().execute();
 	}
 
@@ -88,20 +70,6 @@ public class MessagesFragment extends ListFragment {
         
         private static final String TAG = "ShowMessagesTask";
         private FacebookThread fbThread = null;
-        private ProgressBar progressBar;
-        
-        @Override
-        protected void onPreExecute() {
-            // if dual view
-            /*if (getActivity().findViewById(R.id.second_pane) != null) {
-                progressBar = (ProgressBar) getActivity().findViewById(R.id.second_progressbar);
-            } else {
-                progressBar = (ProgressBar) getActivity().findViewById(R.id.first_progressbar);
-            }
-            
-            progressBar.setVisibility(View.VISIBLE);*/
-            
-        }
 
         @Override
         protected FacebookThread doInBackground(Void... params) {
@@ -185,13 +153,11 @@ public class MessagesFragment extends ListFragment {
         
         @Override
         protected void onPostExecute(FacebookThread fbThread) {      
-            //progressBar.setVisibility(View.GONE);
             show(fbThread);
         }
         
         @Override
         protected void onCancelled(FacebookThread fbThread) {
-            //progressBar.setVisibility(View.GONE);
             clear();
         }
         
