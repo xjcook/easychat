@@ -28,27 +28,6 @@ public class PeopleFragment extends ListFragment {
     private final Facebook facebook = new Facebook(FacebookHelper.APPID);
     private boolean mDualPane;
     
-    /* Chat Service */
-    private boolean mIsBound;
-    private ChatService mChatService; 
-    private ServiceConnection mConnection = new ServiceConnection() {
-     
-        @Override
-        public void onServiceConnected(ComponentName name, IBinder service) {
-            LocalBinder binder = (LocalBinder) service;
-            mChatService = binder.getService();
-            mIsBound = true;  
-        }
-        
-        @Override
-        public void onServiceDisconnected(ComponentName name) {
-            Log.e(TAG, "onServiceDisconnected");
-            mChatService = null;
-            mIsBound = false;
-        }
-     
-    };
-
     @Override
 	public void onActivityCreated(Bundle savedInstanceState) {
 		super.onActivityCreated(savedInstanceState);
@@ -84,19 +63,6 @@ public class PeopleFragment extends ListFragment {
 		setListAdapter(null);
 	}
     
-    public void bindToChatService() {
-        // Bind to ChatService
-        Intent intent = new Intent(getActivity(), ChatService.class);
-        getActivity().bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
-    }
-    
-    public void unbindFromChatService() {
-        if (mIsBound) {
-            // Detach our existing connection.
-            getActivity().unbindService(mConnection);
-        }
-    }
-    
     private void showConversation(String user) {
         if (mDualPane) {
             // Replace MessagesFragment to ConversationFragment
@@ -113,6 +79,40 @@ public class PeopleFragment extends ListFragment {
             Intent intent = new Intent(getActivity(), ConversationActivity.class);
             intent.putExtra(ConversationActivity.USER, user);
             startActivity(intent);
+        }
+    }
+    
+    /* Chat Service */
+    private boolean mIsBound;
+    private ChatService mChatService; 
+    private ServiceConnection mConnection = new ServiceConnection() {
+     
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            LocalBinder binder = (LocalBinder) service;
+            mChatService = binder.getService();
+            mIsBound = true;  
+        }
+        
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            Log.e(TAG, "onServiceDisconnected");
+            mChatService = null;
+            mIsBound = false;
+        }
+     
+    };
+    
+    public void bindToChatService() {
+        // Bind to ChatService
+        Intent intent = new Intent(getActivity(), ChatService.class);
+        getActivity().bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
+    }
+    
+    public void unbindFromChatService() {
+        if (mIsBound) {
+            // Detach our existing connection.
+            getActivity().unbindService(mConnection);
         }
     }
     
