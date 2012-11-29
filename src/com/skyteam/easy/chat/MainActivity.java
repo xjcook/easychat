@@ -3,6 +3,7 @@ package com.skyteam.easy.chat;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
+import android.support.v4.app.FragmentTransaction;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -36,8 +37,10 @@ public class MainActivity extends FragmentActivity {
         // If dual view then show MessagesFragment
         if (mDualPane) {
             MessagesFragment messagesFragment = new MessagesFragment();
-            getSupportFragmentManager().beginTransaction()
-                    .replace(R.id.messages, messagesFragment).commit();
+            FragmentTransaction transaction = getSupportFragmentManager()
+                    .beginTransaction();
+            transaction.replace(R.id.messages, messagesFragment, MessagesFragment.TAG);
+            transaction.commit();
         }
     }
     
