@@ -12,6 +12,7 @@ import org.jivesoftware.smack.packet.Message;
 
 import android.app.Service;
 import android.content.Intent;
+import android.os.AsyncTask;
 import android.os.Binder;
 import android.os.IBinder;
 import android.util.Log;
@@ -32,13 +33,22 @@ public class ChatService extends Service {
         config.setSASLAuthenticationEnabled(true);
         xmpp = new XMPPConnection(config);
         
-        // Connect to XMPP server
-        try {
-            connect();
-        } catch (XMPPException e) {
-            Log.e(TAG, Log.getStackTraceString(e));
-            stopSelf();
+        class ConnectTask implements Runnable {
+
+            @Override
+            public void run() {
+                // Connect to XMPP server
+                try {
+                    connect();
+                } catch (XMPPException e) {
+                    Log.e(TAG, Log.getStackTraceString(e));
+                    stopSelf();
+                }
+            }
+            
         }
+        
+        new Thread(new ConnectTask()).start();
     }
     
     @Override
@@ -54,7 +64,16 @@ public class ChatService extends Service {
     
     @Override
     public void onDestroy() {
-        disconnect();
+        class DisconnectTask implements Runnable {
+
+            @Override
+            public void run() {
+                disconnect();                
+            }
+            
+        }
+        
+        new Thread(new DisconnectTask()).start();
     }
     
     /**
@@ -83,7 +102,8 @@ public class ChatService extends Service {
         xmpp.disconnect();
     }
     
-    public void login(String appId, String accessToken) throws XMPPException {              
+    public void login(String appId, String accessToken) throws XMPPException { 
+        // TODO check connection
         xmpp.login(appId, accessToken, "Easy Chat");
     }
     

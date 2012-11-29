@@ -40,8 +40,13 @@ public class PeopleFragment extends ListFragment {
 	}
     
     @Override
-    public void onDestroy() {
+    public void onStop() {
+        super.onStop();
         unbindFromChatService();
+    }
+    
+    @Override
+    public void onDestroy() {
         super.onDestroy();
     }
 
