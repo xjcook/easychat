@@ -3,6 +3,8 @@ package com.skyteam.easy.chat;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentTransaction;
 import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
@@ -17,16 +19,27 @@ public class ConversationActivity extends FragmentActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.conversation_activity);
         
+        // Get Activity Intent
         Intent intent = getIntent();
         String user = intent.getStringExtra(USER);
         
-        ConversationFragment conversationFragment = ConversationFragment
-                .newInstance(user);
+        // Check if fragment exists, add or replace fragment to Activity View
+        FragmentManager manager = getSupportFragmentManager();
+        FragmentTransaction transaction = manager.beginTransaction();
+        ConversationFragment fragment = (ConversationFragment) manager
+                .findFragmentByTag(ConversationFragment.TAG);
         
-        // Add ConversationFragment to View
-        getSupportFragmentManager().beginTransaction()
-                .add(R.id.conversation, conversationFragment, ConversationFragment.TAG)
-                .commit();        
+        if (fragment != null) {
+            // Replace existing fragment
+            transaction.replace(R.id.conversation, fragment, ConversationFragment.TAG);
+        } else {
+            // Use Activity Intent to create new Fragment
+            fragment = ConversationFragment.newInstance(user);
+            // Add new fragment
+            transaction.add(R.id.conversation, fragment, ConversationFragment.TAG);
+        }
+
+        transaction.commit();
     }
     
     public void onSendMessageButtonClick(View button) {

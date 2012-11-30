@@ -20,11 +20,12 @@ import android.util.Log;
 public class ChatService extends Service {
     
     public static final String TAG = "EasyChatService";
-    private static final String SERVER = "chat.facebook.com";
-    private static final Integer PORT = 5222;
-    private XMPPConnection xmpp;
-    // Binder given to clients
+    public static final String SERVER = "chat.facebook.com";
+    public static final int PORT = 5222;
+    public static final int SLEEP_TIME = 500;
+    public static final int ATTEMPT_COUNT = 5;
     private final IBinder mBinder = new LocalBinder();
+    private XMPPConnection xmpp;
     
     @Override
     public void onCreate() {    
@@ -33,22 +34,11 @@ public class ChatService extends Service {
         config.setSASLAuthenticationEnabled(true);
         xmpp = new XMPPConnection(config);
         
-        class ConnectTask implements Runnable {
-
-            @Override
-            public void run() {
-                // Connect to XMPP server
-                try {
-                    connect();
-                } catch (XMPPException e) {
-                    Log.e(TAG, Log.getStackTraceString(e));
-                    stopSelf();
-                }
-            }
-            
-        }
+        SASLAuthentication.registerSASLMechanism("X-FACEBOOK-PLATFORM", 
+                SASLXFacebookPlatformMechanism.class);
+        SASLAuthentication.supportSASLMechanism("X-FACEBOOK-PLATFORM", 0);
         
-        new Thread(new ConnectTask()).start();
+        connect();
     }
     
     @Override
@@ -64,16 +54,7 @@ public class ChatService extends Service {
     
     @Override
     public void onDestroy() {
-        class DisconnectTask implements Runnable {
-
-            @Override
-            public void run() {
-                disconnect();                
-            }
-            
-        }
-        
-        new Thread(new DisconnectTask()).start();
+        disconnect();                
     }
     
     /**
@@ -90,21 +71,58 @@ public class ChatService extends Service {
     /**
      * Methods for clients
      */
-    public void connect() throws XMPPException {
-        SASLAuthentication.registerSASLMechanism("X-FACEBOOK-PLATFORM", 
-                SASLXFacebookPlatformMechanism.class);
-        SASLAuthentication.supportSASLMechanism("X-FACEBOOK-PLATFORM", 0);
-        
-        xmpp.connect();
+    public void connect() {   
+        new Thread(new Runnable() {
+
+            @Override
+            public void run() {
+                for (int i = 0; i < ATTEMPT_COUNT; i++) {
+                    try {        
+                        if (! xmpp.isConnected()) {
+                            xmpp.connect();
+                        } else {
+                            return;
+                        }    
+                        Thread.sleep(SLEEP_TIME);
+                    } catch (XMPPException e) {
+                        Log.e(TAG, Log.getStackTraceString(e));
+                    } catch (InterruptedException e) {
+                        Log.e(TAG, Log.getStackTraceString(e));
+                    }
+                }
+                
+                // if we can't connect stop service
+                stopSelf();
+            }
+            
+        }).start();
     }
     
     public void disconnect() {
         xmpp.disconnect();
     }
     
-    public void login(String appId, String accessToken) throws XMPPException { 
-        // TODO check connection
-        xmpp.login(appId, accessToken, "Easy Chat");
+    public void login(final String appId, final String accessToken) { 
+        new Thread(new Runnable() {
+
+            @Override
+            public void run() {
+                if (! xmpp.isConnected()) {
+                    return;
+                }
+                
+                if (! xmpp.isAuthenticated()) { 
+                    try {
+                        xmpp.login(appId, accessToken, "Easy Chat");
+                    } catch (XMPPException e) {
+                        Log.e(TAG, Log.getStackTraceString(e));
+                    } catch (IllegalStateException e) {
+                        Log.e(TAG, Log.getStackTraceString(e));
+                    }
+                }    
+            }
+            
+        }).start();
     }
     
     public void sendMessage(String user, String message) throws XMPPException {

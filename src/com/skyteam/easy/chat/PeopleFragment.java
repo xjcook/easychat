@@ -41,13 +41,8 @@ public class PeopleFragment extends ListFragment {
     
     @Override
     public void onStop() {
-        super.onStop();
         unbindFromChatService();
-    }
-    
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
+        super.onStop();
     }
 
 	@Override
@@ -88,15 +83,15 @@ public class PeopleFragment extends ListFragment {
     }
     
     /* Chat Service */
-    private boolean mIsBound;
+    private boolean mIsBound = false;
     private ChatService mChatService; 
     private ServiceConnection mConnection = new ServiceConnection() {
      
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
             LocalBinder binder = (LocalBinder) service;
-            mChatService = binder.getService();
-            mIsBound = true;  
+            mChatService = binder.getService();  
+            mIsBound = true;
         }
         
         @Override
@@ -108,16 +103,17 @@ public class PeopleFragment extends ListFragment {
      
     };
     
-    public void bindToChatService() {
+    private void bindToChatService() {
         // Bind to ChatService
         Intent intent = new Intent(getActivity(), ChatService.class);
         getActivity().bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
     }
     
-    public void unbindFromChatService() {
+    private void unbindFromChatService() {
         if (mIsBound) {
             // Detach our existing connection.
             getActivity().unbindService(mConnection);
+            mIsBound = false;
         }
     }
     
@@ -162,10 +158,6 @@ public class PeopleFragment extends ListFragment {
             
                     Log.v(TAG, "Sleeping ShowPeopleTask...");
                     Thread.sleep(SLEEP_TIME);
-                } catch (XMPPException e) {
-                    /* TODO show retry button */
-                    Log.e(TAG, Log.getStackTraceString(e));
-                    cancel(true);
                 } catch (InterruptedException e) {
                     Log.e(TAG, Log.getStackTraceString(e));
                     cancel(true);

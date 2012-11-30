@@ -2,7 +2,10 @@ package com.skyteam.easy.chat;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.support.v4.app.FragmentActivity;
+import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.util.Log;
 import android.view.Menu;
@@ -37,10 +40,20 @@ public class MainActivity extends FragmentActivity {
         
         // If dual view then show MessagesFragment
         if (mDualPane) {
-            MessagesFragment messagesFragment = new MessagesFragment();
-            FragmentTransaction transaction = getSupportFragmentManager()
-                    .beginTransaction();
-            transaction.replace(R.id.messages, messagesFragment, MessagesFragment.TAG);
+            FragmentManager manager = getSupportFragmentManager();
+            FragmentTransaction transaction = manager.beginTransaction();
+            MessagesFragment messagesFragment = (MessagesFragment) manager
+                    .findFragmentByTag(MessagesFragment.TAG);
+            
+            if (messagesFragment != null) {
+                // Replace existing fragment
+                transaction.replace(R.id.messages, messagesFragment, MessagesFragment.TAG);
+            } else {
+                // Add new fragment
+                messagesFragment = new MessagesFragment();
+                transaction.add(R.id.messages, messagesFragment, MessagesFragment.TAG);
+            }
+
             transaction.commit();
         }
     }

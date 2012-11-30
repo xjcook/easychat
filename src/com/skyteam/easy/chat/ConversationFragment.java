@@ -35,9 +35,9 @@ public class ConversationFragment extends Fragment {
 	}
     
     @Override
-    public void onDestroy() {
+    public void onStop() {
         unbindFromChatService();
-        super.onDestroy();
+        super.onStop();
     }
     
     public void sendMessage() {
@@ -76,15 +76,15 @@ public class ConversationFragment extends Fragment {
     }
 	
     /* Chat Service */
-    private boolean mIsBound;
+    private boolean mIsBound = false;
     private ChatService mChatService; 
     private ServiceConnection mConnection = new ServiceConnection() {
      
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
             LocalBinder binder = (LocalBinder) service;
-            mChatService = binder.getService();
-            mIsBound = true;  
+            mChatService = binder.getService();  
+            mIsBound = true;
         }
         
         @Override
@@ -96,16 +96,17 @@ public class ConversationFragment extends Fragment {
      
     };
     
-    public void bindToChatService() {
+    private void bindToChatService() {
         // Bind to ChatService
         Intent intent = new Intent(getActivity(), ChatService.class);
         getActivity().bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
     }
     
-    public void unbindFromChatService() {
+    private void unbindFromChatService() {
         if (mIsBound) {
             // Detach our existing connection.
             getActivity().unbindService(mConnection);
+            mIsBound = false;
         }
     }
 	
