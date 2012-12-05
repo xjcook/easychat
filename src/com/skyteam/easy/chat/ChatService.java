@@ -12,9 +12,9 @@ import org.jivesoftware.smack.packet.Message;
 
 import android.app.Service;
 import android.content.Intent;
-import android.os.AsyncTask;
 import android.os.Binder;
 import android.os.IBinder;
+import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
 public class ChatService extends Service {
@@ -80,10 +80,10 @@ public class ChatService extends Service {
                     try {        
                         if (! xmpp.isConnected()) {
                             xmpp.connect();
+                            Thread.sleep(SLEEP_TIME);
                         } else {
                             return;
                         }    
-                        Thread.sleep(SLEEP_TIME);
                     } catch (XMPPException e) {
                         Log.e(TAG, Log.getStackTraceString(e));
                     } catch (InterruptedException e) {
@@ -135,7 +135,10 @@ public class ChatService extends Service {
                 
                 if (body != null) {
                     Log.v(TAG, "Received message: " + body);
-            
+                    Intent intent = new Intent(ConversationFragment.ACTION);
+                    intent.putExtra(ConversationFragment.MESSAGE, body);
+                    LocalBroadcastManager.getInstance(getApplicationContext())
+                            .sendBroadcast(intent);
                 }
             }
             

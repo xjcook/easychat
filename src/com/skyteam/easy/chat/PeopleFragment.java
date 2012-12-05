@@ -133,11 +133,16 @@ public class PeopleFragment extends ListFragment {
                     if (FacebookHelper.sessionRestore(facebook, getActivity())) {
                         Log.v(TAG, "Authorized!");
                         
+                        if (mIsBound && (! mChatService.isAuthenticated())) {
+                            mChatService.login(facebook.getAppId(), 
+                                               facebook.getAccessToken());
+                        }
+                        
                         if (mIsBound && mChatService.isAuthenticated()) {
                             Log.v(TAG, "Connected!");
                     
-                            Collection<RosterEntry> entries = mChatService.getRoster()
-                                    .getEntries();
+                            Collection<RosterEntry> entries = mChatService
+                                    .getRoster().getEntries();
                             
                             if (! entries.isEmpty()) {
                                 return entries;
@@ -146,10 +151,6 @@ public class PeopleFragment extends ListFragment {
                             }
                         } else {
                             Log.v(TAG, "Not connected!");
-                            if (mIsBound) {
-                                mChatService.login(facebook.getAppId(), 
-                                                   facebook.getAccessToken());
-                            }
                         }
                     } else {
                         Log.v(TAG, "Not authorized!");

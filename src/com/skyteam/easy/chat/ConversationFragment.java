@@ -1,26 +1,36 @@
 package com.skyteam.easy.chat;
 
+import java.util.ArrayList;
+
 import org.jivesoftware.smack.XMPPException;
 
-import com.skyteam.easy.chat.ChatService.LocalBinder;
-
+import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.v4.app.Fragment;
+import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
+import android.widget.ListView;
+
+import com.skyteam.easy.chat.ChatService.LocalBinder;
 
 public class ConversationFragment extends Fragment {
 
     public static final String TAG = "ConversationFragment";
     public static final String USER = "user";
+    public static final String ACTION = "chat.message";
+    public static final String MESSAGE = "message";
+    private ArrayList<String> messages = new ArrayList<String>();
+    private ConversationAdapter adapter;
     
 	@Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -32,11 +42,24 @@ public class ConversationFragment extends Fragment {
 	public void onActivityCreated(Bundle savedInstanceState) {
 		super.onActivityCreated(savedInstanceState);
 		bindToChatService();
+		
+		// Assign adapter to ListView
+		adapter = new ConversationAdapter(getActivity(), messages);
+		ListView listView = (ListView) getView().findViewById(R.id.messages_listview);
+		listView.setAdapter(adapter);
+		
+		// Register to receive messages
+		LocalBroadcastManager.getInstance(getActivity())
+		        .registerReceiver(mMessageReceiver, new IntentFilter(ACTION));
 	}
     
     @Override
     public void onStop() {
         unbindFromChatService();
+        
+        LocalBroadcastManager.getInstance(getActivity())
+                .unregisterReceiver(mMessageReceiver);
+        
         super.onStop();
     }
     
@@ -109,5 +132,16 @@ public class ConversationFragment extends Fragment {
             mIsBound = false;
         }
     }
+    
+    /* Broadcast receiver */
+    private BroadcastReceiver mMessageReceiver = new BroadcastReceiver() {
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            messages.add(intent.getStringExtra(MESSAGE));
+            adapter.notifyDataSetChanged();
+        }
+        
+    };
 	
 }
