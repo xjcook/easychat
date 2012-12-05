@@ -97,14 +97,12 @@ public class PeopleFragment extends ListFragment {
         @Override
         public void onServiceDisconnected(ComponentName name) {
             Log.e(TAG, "onServiceDisconnected");
-            mChatService = null;
             mIsBound = false;
         }
      
     };
     
     private void bindToChatService() {
-        // Bind to ChatService
         Intent intent = new Intent(getActivity(), ChatService.class);
         getActivity().bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
     }
@@ -120,7 +118,7 @@ public class PeopleFragment extends ListFragment {
     private class ShowPeopleTask extends AsyncTask<Void, Void, Collection<RosterEntry>> {
         
         private static final String TAG = "ShowPeopleTask";
-        private static final int SLEEP_TIME = 500;
+        private static final int SLEEP_TIME = 1000;
         
         @Override
         protected Collection<RosterEntry> doInBackground(Void... params) {            
@@ -129,32 +127,16 @@ public class PeopleFragment extends ListFragment {
                     if (isCancelled()) {
                         return null;
                     }
-                    
-                    if (FacebookHelper.sessionRestore(facebook, getActivity())) {
-                        Log.v(TAG, "Authorized!");
+                                                 
+                    if (mIsBound && mChatService.isAuthenticated()) {
+                        Log.v(TAG, "Authenticated!");
+                
+                        Collection<RosterEntry> entries = mChatService
+                                .getRoster().getEntries();
                         
-                        if (mIsBound && (! mChatService.isAuthenticated())) {
-                            mChatService.login(facebook.getAppId(), 
-                                               facebook.getAccessToken());
+                        if (! entries.isEmpty()) {
+                            return entries;
                         }
-                        
-                        if (mIsBound && mChatService.isAuthenticated()) {
-                            Log.v(TAG, "Connected!");
-                    
-                            Collection<RosterEntry> entries = mChatService
-                                    .getRoster().getEntries();
-                            
-                            if (! entries.isEmpty()) {
-                                return entries;
-                            } else {
-                                Log.v(TAG, "Roster Entries are empty");
-                            }
-                        } else {
-                            Log.v(TAG, "Not connected!");
-                        }
-                    } else {
-                        Log.v(TAG, "Not authorized!");
-                        Log.v(TAG, "Token: " + facebook.getAccessToken());
                     }
             
                     Log.v(TAG, "Sleeping ShowPeopleTask...");

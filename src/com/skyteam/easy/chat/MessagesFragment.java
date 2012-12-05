@@ -55,7 +55,7 @@ public class MessagesFragment extends ListFragment {
 	private class ShowMessagesTask extends AsyncTask<Void, Void, FacebookThread> {
         
         private static final String TAG = "ShowMessagesTask";
-        private static final int SLEEP_TIME = 500;
+        private static final int SLEEP_TIME = 1000;
         private FacebookThread fbThread = null;
 
         @Override
@@ -124,10 +124,7 @@ public class MessagesFragment extends ListFragment {
                                 cancel(true);
                             }
                         }
-                    } else {
-                        Log.v(TAG, "Not authorized!");
-                        Log.v(TAG, "Token: " + facebook.getAccessToken());
-                    }
+                    } 
         
                     Log.v(TAG, "Sleeping ShowMessagesTask...");
                     Thread.sleep(SLEEP_TIME);

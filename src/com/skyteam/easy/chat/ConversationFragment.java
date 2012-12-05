@@ -113,7 +113,6 @@ public class ConversationFragment extends Fragment {
         @Override
         public void onServiceDisconnected(ComponentName name) {
             Log.e(TAG, "onServiceDisconnected");
-            mChatService = null;
             mIsBound = false;
         }
      

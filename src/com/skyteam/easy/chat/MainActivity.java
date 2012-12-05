@@ -1,6 +1,7 @@
 package com.skyteam.easy.chat;
 
 import android.content.Intent;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -30,9 +31,32 @@ public class MainActivity extends FragmentActivity {
         // Log In to Facebook
         mFacebookHelper.login();
         
-        // Start ChatService
-        Intent intent = new Intent(this, ChatService.class);
-        startService(intent);
+        // Start ChatService when logged to Facebook
+        new Thread(new Runnable() {
+            
+            private static final int SLEEP_TIME = 1000;
+
+            @Override
+            public void run() {
+                for (;;) {
+                    try {
+                        if (facebook.isSessionValid()) {
+                            Intent intent = new Intent(MainActivity.this, 
+                                    ChatService.class);
+                            intent.putExtra(FacebookHelper.TOKEN, 
+                                    facebook.getAccessToken());
+                            startService(intent);
+                            return;
+                        } else {
+                            Thread.sleep(SLEEP_TIME);
+                        }                        
+                    } catch (InterruptedException e) {
+                        Log.e(TAG, Log.getStackTraceString(e));
+                    }
+                }                
+            }
+            
+        }).start();
         
         // Check dualView
         View messagesFrame = findViewById(R.id.messages);

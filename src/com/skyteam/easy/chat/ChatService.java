@@ -23,32 +23,33 @@ public class ChatService extends Service {
     public static final String SERVER = "chat.facebook.com";
     public static final int PORT = 5222;
     public static final int SLEEP_TIME = 500;
-    public static final int ATTEMPT_COUNT = 5;
+    public static final int ATTEMPT_COUNT = 10;
     private final IBinder mBinder = new LocalBinder();
     private XMPPConnection xmpp;
+    private String mAccessToken;
     
     @Override
-    public void onCreate() {    
+    public void onCreate() {  
         ConnectionConfiguration config = new ConnectionConfiguration(SERVER, PORT);
         config.setDebuggerEnabled(false);
         config.setSASLAuthenticationEnabled(true);
         xmpp = new XMPPConnection(config);
-        
         SASLAuthentication.registerSASLMechanism("X-FACEBOOK-PLATFORM", 
                 SASLXFacebookPlatformMechanism.class);
         SASLAuthentication.supportSASLMechanism("X-FACEBOOK-PLATFORM", 0);
-        
-        connect();
     }
     
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        mAccessToken = intent.getStringExtra(FacebookHelper.TOKEN);
+        connect();
         Log.i(TAG, "Received start id " + startId + ": " + intent);
         return START_STICKY;
     }
     
     @Override
     public IBinder onBind(Intent intent) {
+        Log.i(TAG, "Bound to " + intent);
         return mBinder;
     }
     
@@ -82,6 +83,7 @@ public class ChatService extends Service {
                             xmpp.connect();
                             Thread.sleep(SLEEP_TIME);
                         } else {
+                            login(FacebookHelper.APPID, mAccessToken);
                             return;
                         }    
                     } catch (XMPPException e) {
@@ -107,19 +109,22 @@ public class ChatService extends Service {
 
             @Override
             public void run() {
-                if (! xmpp.isConnected()) {
-                    return;
-                }
-                
-                if (! xmpp.isAuthenticated()) { 
-                    try {
-                        xmpp.login(appId, accessToken, "Easy Chat");
+                for (;;) {
+                    try {                        
+                        if (xmpp.isAuthenticated()) { 
+                            return;
+                        } else {
+                            xmpp.login(appId, accessToken, "Easy Chat");
+                            Thread.sleep(SLEEP_TIME);
+                        }
                     } catch (XMPPException e) {
                         Log.e(TAG, Log.getStackTraceString(e));
                     } catch (IllegalStateException e) {
                         Log.e(TAG, Log.getStackTraceString(e));
+                    } catch (InterruptedException e) {
+                        Log.e(TAG, Log.getStackTraceString(e));
                     }
-                }    
+                }
             }
             
         }).start();

@@ -23,9 +23,9 @@ public class FacebookHelper {
     public static final String TAG = "FacebookHelper";
     public static final String APPID = "424998287563509";
     public static final String[] PERMISSIONS = {"xmpp_login", "read_mailbox"};
-    private static final String TOKEN = "access_token";
-    private static final String EXPIRES = "access_expires";
-    private static final String KEY = "facebook-session";
+    public static final String TOKEN = "access_token";
+    public static final String EXPIRES = "access_expires";
+    public static final String KEY = "facebook-session";
     private Context context;
     private Facebook facebook;
     private AsyncFacebookRunner mAsyncRunner;
