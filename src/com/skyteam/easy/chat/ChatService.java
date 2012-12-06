@@ -22,7 +22,6 @@ public class ChatService extends Service {
     public static final String TAG = "EasyChatService";
     public static final String SERVER = "chat.facebook.com";
     public static final int PORT = 5222;
-    public static final int SLEEP_TIME = 500;
     public static final int ATTEMPT_COUNT = 10;
     private final IBinder mBinder = new LocalBinder();
     private XMPPConnection xmpp;
@@ -77,11 +76,11 @@ public class ChatService extends Service {
 
             @Override
             public void run() {
-                for (int i = 0; i < ATTEMPT_COUNT; i++) {
+                for (;;) {
                     try {        
                         if (! xmpp.isConnected()) {
                             xmpp.connect();
-                            Thread.sleep(SLEEP_TIME);
+                            Thread.sleep(MainActivity.SLEEP_TIME);
                         } else {
                             login(FacebookHelper.APPID, mAccessToken);
                             return;
@@ -92,9 +91,6 @@ public class ChatService extends Service {
                         Log.e(TAG, Log.getStackTraceString(e));
                     }
                 }
-                
-                // if we can't connect stop service
-                stopSelf();
             }
             
         }).start();
@@ -112,10 +108,14 @@ public class ChatService extends Service {
                 for (;;) {
                     try {                        
                         if (xmpp.isAuthenticated()) { 
+                            // Inform that user is logged by broadcast
+                            Intent intent = new Intent(MainActivity.ACTION);
+                            LocalBroadcastManager.getInstance(getApplicationContext())
+                                    .sendBroadcast(intent);
                             return;
                         } else {
                             xmpp.login(appId, accessToken, "Easy Chat");
-                            Thread.sleep(SLEEP_TIME);
+                            Thread.sleep(MainActivity.SLEEP_TIME);
                         }
                     } catch (XMPPException e) {
                         Log.e(TAG, Log.getStackTraceString(e));

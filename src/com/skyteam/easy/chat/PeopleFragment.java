@@ -3,54 +3,56 @@ package com.skyteam.easy.chat;
 import java.util.Collection;
 
 import org.jivesoftware.smack.RosterEntry;
-import org.jivesoftware.smack.XMPPException;
 
-import android.content.ComponentName;
-import android.content.Context;
 import android.content.Intent;
-import android.content.ServiceConnection;
-import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.IBinder;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.app.ListFragment;
-import android.util.Log;
+import android.text.Editable;
+import android.text.TextWatcher;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
+import android.widget.EditText;
 import android.widget.ListView;
-import android.widget.Toast;
-
-import com.facebook.android.Facebook;
-import com.skyteam.easy.chat.ChatService.LocalBinder;
 
 public class PeopleFragment extends ListFragment {
     
     public static final String TAG = "PeopleFragment";
-    private final Facebook facebook = new Facebook(FacebookHelper.APPID);
     private boolean mDualPane;
     
     @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+            Bundle savedInstanceState) {
+        return inflater.inflate(R.layout.people_fragment, container, false);
+    }
+
+    @Override
 	public void onActivityCreated(Bundle savedInstanceState) {
 		super.onActivityCreated(savedInstanceState);
-        bindToChatService();
-        new ShowPeopleTask().execute();
-        
+
         // Check dualView
         View messagesFrame = getActivity().findViewById(R.id.messages);
         mDualPane = messagesFrame != null && messagesFrame.getVisibility() == View.VISIBLE;
+        
+        // Add TextWatcher Listener
+        EditText filterText = (EditText) getView().findViewById(R.id.people_filter_edittext);
+        filterText.addTextChangedListener(mFilterTextWatcher);
 	}
     
-    @Override
-    public void onStop() {
-        unbindFromChatService();
-        super.onStop();
+	@Override
+    public void onDestroy() {
+	    // Remove TextWatcher Listener
+	    EditText filterText = (EditText) getView().findViewById(R.id.people_filter_edittext);
+	    filterText.removeTextChangedListener(mFilterTextWatcher);
+	    
+	    super.onDestroy();
     }
 
-	@Override
+    @Override
 	public void onListItemClick(ListView l, View v, int position, long id) {
 		super.onListItemClick(l, v, position, id);
 		RosterEntry entry = (RosterEntry) getListAdapter().getItem(position);
-    	Toast.makeText(getActivity(), entry.getName() + " selected", 
-    			Toast.LENGTH_LONG).show();
     	showConversation(entry.getUser());
 	}
 	
@@ -63,7 +65,7 @@ public class PeopleFragment extends ListFragment {
 		setListAdapter(null);
 	}
     
-    private void showConversation(String user) {
+    private void showConversation(String user) {        
         if (mDualPane) {
             // Replace MessagesFragment to ConversationFragment
             ConversationFragment conversationFragment = 
@@ -82,82 +84,21 @@ public class PeopleFragment extends ListFragment {
         }
     }
     
-    /* Chat Service */
-    private boolean mIsBound = false;
-    private ChatService mChatService; 
-    private ServiceConnection mConnection = new ServiceConnection() {
-     
+    private TextWatcher mFilterTextWatcher = new TextWatcher() {
+        
         @Override
-        public void onServiceConnected(ComponentName name, IBinder service) {
-            LocalBinder binder = (LocalBinder) service;
-            mChatService = binder.getService();  
-            mIsBound = true;
+        public void onTextChanged(CharSequence s, int start, int before, int count) {
+            PeopleAdapter adapter = (PeopleAdapter) getListAdapter();
+            adapter.getFilter().filter(s);
         }
         
         @Override
-        public void onServiceDisconnected(ComponentName name) {
-            Log.e(TAG, "onServiceDisconnected");
-            mIsBound = false;
-        }
-     
+        public void beforeTextChanged(CharSequence s, int start, int count,
+                int after) {}
+        
+        @Override
+        public void afterTextChanged(Editable s) {}
+        
     };
-    
-    private void bindToChatService() {
-        Intent intent = new Intent(getActivity(), ChatService.class);
-        getActivity().bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
-    }
-    
-    private void unbindFromChatService() {
-        if (mIsBound) {
-            // Detach our existing connection.
-            getActivity().unbindService(mConnection);
-            mIsBound = false;
-        }
-    }
-    
-    private class ShowPeopleTask extends AsyncTask<Void, Void, Collection<RosterEntry>> {
-        
-        private static final String TAG = "ShowPeopleTask";
-        private static final int SLEEP_TIME = 1000;
-        
-        @Override
-        protected Collection<RosterEntry> doInBackground(Void... params) {            
-            for (;;) {
-                try {
-                    if (isCancelled()) {
-                        return null;
-                    }
-                                                 
-                    if (mIsBound && mChatService.isAuthenticated()) {
-                        Log.v(TAG, "Authenticated!");
-                
-                        Collection<RosterEntry> entries = mChatService
-                                .getRoster().getEntries();
-                        
-                        if (! entries.isEmpty()) {
-                            return entries;
-                        }
-                    }
-            
-                    Log.v(TAG, "Sleeping ShowPeopleTask...");
-                    Thread.sleep(SLEEP_TIME);
-                } catch (InterruptedException e) {
-                    Log.e(TAG, Log.getStackTraceString(e));
-                    cancel(true);
-                }
-            }                                            
-        }
-        
-        @Override
-        protected void onPostExecute(Collection<RosterEntry> entries) {
-            show(entries);
-        }
-        
-        @Override
-        protected void onCancelled(Collection<RosterEntry> entries) {
-            clear();
-        }
-        
-    }
 	
 }

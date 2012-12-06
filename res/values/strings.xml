@@ -8,5 +8,7 @@
     <string name="menu_logout">Log Out</string>
     <string name="menu_exit">Exit</string>
     <string name="button_send_message">Send</string>
+    <string name="hint_people_filter_edittext">Type to filter&#8230;</string>
+    <string name="hint_message_edittext">Type chat message&#8230;</string>
     
 </resources>

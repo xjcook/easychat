@@ -1,6 +1,7 @@
 package com.skyteam.easy.chat;
 
 import java.util.ArrayList;
+import java.util.Collections;
 
 import android.content.Context;
 import android.view.LayoutInflater;
@@ -43,6 +44,13 @@ public class ConversationAdapter extends ArrayAdapter<String> {
         holder.text.setText(name);
         
         return rowView;
+    }
+
+    @Override
+    public void notifyDataSetChanged() {
+        // Sort by newest messages
+        Collections.reverse(messages);
+        super.notifyDataSetChanged();
     }
     
 }

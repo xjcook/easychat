@@ -55,7 +55,6 @@ public class MessagesFragment extends ListFragment {
 	private class ShowMessagesTask extends AsyncTask<Void, Void, FacebookThread> {
         
         private static final String TAG = "ShowMessagesTask";
-        private static final int SLEEP_TIME = 1000;
         private FacebookThread fbThread = null;
 
         @Override
@@ -127,7 +126,7 @@ public class MessagesFragment extends ListFragment {
                     } 
         
                     Log.v(TAG, "Sleeping ShowMessagesTask...");
-                    Thread.sleep(SLEEP_TIME);
+                    Thread.sleep(MainActivity.SLEEP_TIME);
                 } catch (InterruptedException e) {
                     Log.e(TAG, Log.getStackTraceString(e));
                     cancel(true);

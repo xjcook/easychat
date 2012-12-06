@@ -18,7 +18,9 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:inputType="textMultiLine" />
+            android:hint="@string/hint_message_edittext"
+            android:inputType="textMultiLine"
+            android:maxLines="5" />
 
         <Button android:text="@string/button_send_message"
             android:layout_width="wrap_content"
