@@ -1,10 +1,12 @@
 package com.skyteam.easy.chat;
 
+import java.util.ArrayList;
 import java.util.Collection;
 
 import org.jivesoftware.smack.RosterEntry;
 
 import android.content.Intent;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.app.ListFragment;
@@ -52,13 +54,12 @@ public class PeopleFragment extends ListFragment {
     @Override
 	public void onListItemClick(ListView l, View v, int position, long id) {
 		super.onListItemClick(l, v, position, id);
-		RosterEntry entry = (RosterEntry) getListAdapter().getItem(position);
-    	showConversation(entry.getUser());
+		String entry = (String) getListAdapter().getItem(position);
+    	showConversation(entry);
 	}
 	
-	public void show(Collection<RosterEntry> entries) {
-		setListAdapter(new PeopleAdapter(getActivity(), entries
-				.toArray(new RosterEntry[entries.size()])));
+	public void show(ArrayList<String> entries) {
+        setListAdapter(new PeopleAdapter(getActivity(), entries));
 	}
 
     public void clear() {

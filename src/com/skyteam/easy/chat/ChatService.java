@@ -1,17 +1,23 @@
 package com.skyteam.easy.chat;
 
+import java.util.ArrayList;
+
 import org.jivesoftware.smack.Chat;
 import org.jivesoftware.smack.ChatManager;
 import org.jivesoftware.smack.ConnectionConfiguration;
 import org.jivesoftware.smack.MessageListener;
 import org.jivesoftware.smack.Roster;
+import org.jivesoftware.smack.RosterEntry;
 import org.jivesoftware.smack.SASLAuthentication;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.packet.Message;
 
 import android.app.Service;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Binder;
 import android.os.IBinder;
 import android.support.v4.content.LocalBroadcastManager;
@@ -21,11 +27,27 @@ public class ChatService extends Service {
     
     public static final String TAG = "EasyChatService";
     public static final String SERVER = "chat.facebook.com";
+    public static final String ACTION = "chat.receive";
     public static final int PORT = 5222;
     public static final int ATTEMPT_COUNT = 10;
     private final IBinder mBinder = new LocalBinder();
     private XMPPConnection xmpp;
     private String mAccessToken;
+    
+    private BroadcastReceiver mSendMessageReceiver = new BroadcastReceiver() {
+        
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String user = intent.getStringExtra(ConversationFragment.USER);
+            String message = intent.getStringExtra(ConversationFragment.MESSAGE);
+            
+            try {
+                sendMessage(user, message);
+            } catch (XMPPException e) {
+                Log.e(TAG, Log.getStackTraceString(e));
+            }
+        }
+    };
     
     @Override
     public void onCreate() {  
@@ -36,6 +58,9 @@ public class ChatService extends Service {
         SASLAuthentication.registerSASLMechanism("X-FACEBOOK-PLATFORM", 
                 SASLXFacebookPlatformMechanism.class);
         SASLAuthentication.supportSASLMechanism("X-FACEBOOK-PLATFORM", 0);
+        LocalBroadcastManager.getInstance(getApplicationContext())
+                .registerReceiver(mSendMessageReceiver, 
+                                  new IntentFilter(ConversationFragment.ACTION));
     }
     
     @Override
@@ -54,6 +79,8 @@ public class ChatService extends Service {
     
     @Override
     public void onDestroy() {
+        LocalBroadcastManager.getInstance(getApplicationContext())
+                .unregisterReceiver(mSendMessageReceiver);
         disconnect();                
     }
     
@@ -108,10 +135,18 @@ public class ChatService extends Service {
                 for (;;) {
                     try {                        
                         if (xmpp.isAuthenticated()) { 
+                            // Get roster and convert to ArrayList
+                            ArrayList<String> list = new ArrayList<String>();
+                            for (RosterEntry entry : xmpp.getRoster().getEntries()) {
+                                list.add(entry.getName());
+                            }
+                            
                             // Inform that user is logged by broadcast
                             Intent intent = new Intent(MainActivity.ACTION);
+                            intent.putExtra(MainActivity.ENTRIES, list);
                             LocalBroadcastManager.getInstance(getApplicationContext())
                                     .sendBroadcast(intent);
+                            
                             return;
                         } else {
                             xmpp.login(appId, accessToken, "Easy Chat");

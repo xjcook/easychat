@@ -1,27 +1,28 @@
 package com.skyteam.easy.chat;
 
-import org.jivesoftware.smack.RosterEntry;
+import java.util.ArrayList;
+import java.util.Collections;
 
 import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
-import android.widget.Filter;
 import android.widget.TextView;
 
-public class PeopleAdapter extends ArrayAdapter<RosterEntry> {
+public class PeopleAdapter extends ArrayAdapter<String> {
 	private final Context context;
-	private final RosterEntry[] entries;
+	private final ArrayList<String> entries;
 	
 	static class ViewHolder {
 		public TextView text;
 	}
 	
-	public PeopleAdapter(Context context, RosterEntry[] entries) {
+	public PeopleAdapter(Context context, ArrayList<String> entries) {
 		super(context, R.layout.people_item, entries);
 		this.context = context;
 		this.entries = entries;
+		Collections.sort(entries);
 	}
 	
 	@Override
@@ -39,7 +40,7 @@ public class PeopleAdapter extends ArrayAdapter<RosterEntry> {
 		}
 		
 		ViewHolder holder = (ViewHolder) rowView.getTag();
-		String name = entries[position].getName();
+		String name = entries.get(position);
 		holder.text.setText(name);
 		
 		return rowView;
@@ -47,14 +48,8 @@ public class PeopleAdapter extends ArrayAdapter<RosterEntry> {
 
     @Override
     public void notifyDataSetChanged() {
-        // TODO Auto-generated method stub
+        Collections.sort(entries);
         super.notifyDataSetChanged();
-    }
-
-    @Override
-    public Filter getFilter() {
-        // TODO Auto-generated method stub
-        return super.getFilter();
     }
 	
 }

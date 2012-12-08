@@ -1,5 +1,7 @@
 package com.skyteam.easy.chat;
 
+import java.util.ArrayList;
+
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
@@ -24,36 +26,19 @@ public class MainActivity extends FragmentActivity {
 
     public static final String TAG = "MainActivity";
     public static final String ACTION = "show.people";
+    public static final String ENTRIES = "entries";
     public static final int SLEEP_TIME = 1000;
     private final Facebook facebook = new Facebook(FacebookHelper.APPID);
     private final FacebookHelper mFacebookHelper = new FacebookHelper(this, facebook);
     private boolean mDualPane;
     
-    /* Chat Service */
-    public boolean mIsBound = false;
-    public ChatService mChatService; 
-    private ServiceConnection mConnection = new ServiceConnection() {
-     
-        @Override
-        public void onServiceConnected(ComponentName name, IBinder service) {
-            LocalBinder binder = (LocalBinder) service;
-            mChatService = binder.getService();  
-            mIsBound = true;
-        }
-        
-        @Override
-        public void onServiceDisconnected(ComponentName name) {
-            Log.e(TAG, "onServiceDisconnected");
-            mIsBound = false;
-        }
-     
-    };
-    
     private BroadcastReceiver mIsLoggedReceiver = new BroadcastReceiver() {
 
         @Override
         public void onReceive(Context context, Intent intent) {
-            showPeople();            
+            PeopleFragment fragment = (PeopleFragment) getSupportFragmentManager()
+                    .findFragmentById(R.id.people);
+            fragment.show(intent.getStringArrayListExtra(ENTRIES));         
         }
         
     };
@@ -122,11 +107,6 @@ public class MainActivity extends FragmentActivity {
     @Override
     protected void onStart() {
         super.onStart();
-        
-        // Bind to ChatService
-        Intent intent = new Intent(MainActivity.this, 
-                ChatService.class);
-        bindService(intent, mConnection, 0);
     }
     
     @Override
@@ -143,12 +123,6 @@ public class MainActivity extends FragmentActivity {
     @Override
     protected void onStop() {
         super.onStop();
-        
-        // Unbind from ChatService
-        if (mIsBound) {
-            unbindService(mConnection);
-            mIsBound = false;
-        }
     }
 
     @Override
@@ -253,19 +227,9 @@ public class MainActivity extends FragmentActivity {
     }
     
     public void onSendMessageButtonClick(View button) {
-        if (mIsBound) {
-            ConversationFragment f = (ConversationFragment) getSupportFragmentManager()
-                    .findFragmentByTag(ConversationFragment.TAG);
-            f.sendMessage(mChatService);
-        } else {
-            Log.e(TAG, "Service is not bound!");
-        }
+        ConversationFragment f = (ConversationFragment) getSupportFragmentManager()
+                .findFragmentByTag(ConversationFragment.TAG);
+        f.sendMessage();
     }  
-    
-    public void showPeople() {
-        PeopleFragment fragment = (PeopleFragment) getSupportFragmentManager()
-                .findFragmentById(R.id.people);
-        fragment.show(mChatService.getRoster().getEntries());
-    }
     
 }
