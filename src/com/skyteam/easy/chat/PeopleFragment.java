@@ -1,6 +1,5 @@
 package com.skyteam.easy.chat;
 
-import java.util.ArrayList;
 import java.util.Collection;
 
 import org.jivesoftware.smack.RosterEntry;
@@ -12,6 +11,7 @@ import android.support.v4.app.FragmentTransaction;
 import android.support.v4.app.ListFragment;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -40,6 +40,9 @@ public class PeopleFragment extends ListFragment {
         // Add TextWatcher Listener
         EditText filterText = (EditText) getView().findViewById(R.id.people_filter_edittext);
         filterText.addTextChangedListener(mFilterTextWatcher);
+        
+        // Start ShowPeopleTask
+        new ShowPeopleTask().execute();
 	}
     
 	@Override
@@ -54,12 +57,13 @@ public class PeopleFragment extends ListFragment {
     @Override
 	public void onListItemClick(ListView l, View v, int position, long id) {
 		super.onListItemClick(l, v, position, id);
-		String entry = (String) getListAdapter().getItem(position);
-    	showConversation(entry);
+		RosterEntry entry = (RosterEntry) getListAdapter().getItem(position);
+    	showConversation(entry.getUser());
 	}
-	
-	public void show(ArrayList<String> entries) {
-        setListAdapter(new PeopleAdapter(getActivity(), entries));
+    
+	public void show(Collection<RosterEntry> entries) {
+		setListAdapter(new PeopleAdapter(getActivity(), entries
+				.toArray(new RosterEntry[entries.size()])));
 	}
 
     public void clear() {
@@ -83,6 +87,36 @@ public class PeopleFragment extends ListFragment {
             intent.putExtra(ConversationActivity.USER, user);
             startActivity(intent);
         }
+    }
+    
+    private class ShowPeopleTask extends AsyncTask<Void, Void, Collection<RosterEntry>> {
+
+        @Override
+        protected Collection<RosterEntry> doInBackground(Void... params) {            
+            for (;;) {
+                // Get ChatService from MainActivity
+                MainActivity activity = (MainActivity) getActivity();
+                ChatService chatService = activity.mChatService;
+                boolean isBound = activity.mIsBound;
+                
+                if (isBound && chatService.isAuthenticated()) {
+                    return chatService.getRoster().getEntries();
+                } else {
+                    try {
+                        Thread.sleep(MainActivity.SLEEP_TIME);
+                        Log.v(TAG, "Sleeping ShowPeopleTask...");
+                    } catch (InterruptedException e) {
+                        Log.e(TAG, Log.getStackTraceString(e));
+                    }
+                }                
+            }
+        }
+        
+        @Override
+        protected void onPostExecute(Collection<RosterEntry> entries) {
+            show(entries);
+        }
+        
     }
     
     private TextWatcher mFilterTextWatcher = new TextWatcher() {

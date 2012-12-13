@@ -66,15 +66,16 @@ public class ConversationFragment extends Fragment {
         super.onDestroy();
     }
     
-    public void sendMessage() {
+    public void sendMessage(ChatService service) {
         EditText editText = (EditText) getView().findViewById(R.id.message_edittext);
         String user = getArguments().getString(USER);
         String message = editText.getText().toString();
         
-        Intent intent = new Intent(ChatService.ACTION);
-        intent.putExtra(USER, user);
-        intent.putExtra(MESSAGE, message);
-        LocalBroadcastManager.getInstance(getActivity()).sendBroadcast(intent);
+        try {
+            service.sendMessage(user, message);
+        } catch (XMPPException e) {
+            Log.e(TAG, Log.getStackTraceString(e));
+        }
     }
     
     public void show() {
