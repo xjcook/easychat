@@ -1,23 +1,28 @@
 package com.skyteam.easy.chat;
 
-import android.content.BroadcastReceiver;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.net.MalformedURLException;
+
 import android.content.ComponentName;
-import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
-import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 
+import com.facebook.android.AsyncFacebookRunner;
+import com.facebook.android.DialogError;
 import com.facebook.android.Facebook;
+import com.facebook.android.FacebookError;
+import com.facebook.android.AsyncFacebookRunner.RequestListener;
+import com.facebook.android.Facebook.DialogListener;
 import com.skyteam.easy.chat.ChatService.LocalBinder;
 
 public class MainActivity extends FragmentActivity {
@@ -26,7 +31,7 @@ public class MainActivity extends FragmentActivity {
     public static final String ACTION = "show.people";
     public static final int SLEEP_TIME = 1000;
     private final Facebook facebook = new Facebook(FacebookHelper.APPID);
-    private final FacebookHelper mFacebookHelper = new FacebookHelper(this, facebook);
+    private final AsyncFacebookRunner mAsyncRunner = new AsyncFacebookRunner(facebook);
     private boolean mDualPane;
     
     /* Chat Service */
@@ -55,7 +60,7 @@ public class MainActivity extends FragmentActivity {
         setContentView(R.layout.main_activity);
         
         // Log In to Facebook
-        mFacebookHelper.login();
+        loginToFacebook();
         
         // Start ChatService when logged to Facebook
         new Thread(new Runnable() {
@@ -189,7 +194,7 @@ public class MainActivity extends FragmentActivity {
             
         // Log In
         case R.id.menu_login:
-            mFacebookHelper.login();
+            loginToFacebook();
             
             /*if (findViewById(R.id.first_pane) != null) {
                 new ShowPeopleTask().execute();
@@ -204,7 +209,7 @@ public class MainActivity extends FragmentActivity {
         // Log Out
         case R.id.menu_logout:
             // Chat & Facebook logout 
-            mFacebookHelper.logout();
+            logoutFromFacebook();
             //mChat.logout();  
             
             // Clear fragments
@@ -243,6 +248,75 @@ public class MainActivity extends FragmentActivity {
         } else {
             Log.e(TAG, "Service is not bound!");
         }
-    }  
+    } 
+    
+    public void loginToFacebook() {        
+        if (! FacebookHelper.sessionRestore(facebook, this)) {
+            facebook.authorize(this, FacebookHelper.PERMISSIONS, new DialogListener() {
+            
+                @Override
+                public void onComplete(Bundle values) {
+                    Log.v(TAG, "Facebook logged in");
+    
+                    // Save token
+                    FacebookHelper.sessionSave(facebook, MainActivity.this);
+                }
+                
+                @Override
+                public void onCancel() {
+                    Log.v(TAG, "Facebook login cancelled");
+                    /* TODO what happens if user cancel authorize */
+                }
+                
+                @Override
+                public void onFacebookError(FacebookError e) {
+                    Log.e(TAG, Log.getStackTraceString(e));
+                }
+                
+                @Override
+                public void onError(DialogError e) {
+                    Log.e(TAG, Log.getStackTraceString(e));
+                }
+                    
+            });
+        }   
+    }
+    
+    public void logoutFromFacebook() {
+        // Invalidate token in shared preferences
+        FacebookHelper.sessionClear(this);
+        
+        // Facebook logout
+        mAsyncRunner.logout(this, new RequestListener() {
+            
+            @Override
+            public void onComplete(String response, Object state) {
+                Log.v(TAG, "Facebook logged out");
+            }
+            
+            @Override
+            public void onFacebookError(FacebookError e, Object state) {
+                Log.e(TAG, Log.getStackTraceString(e));
+            }
+            
+            @Override
+            public void onIOException(IOException e, Object state) {
+                Log.e(TAG, Log.getStackTraceString(e));
+            }
+            
+            @Override
+            public void onFileNotFoundException(FileNotFoundException e, 
+                    Object state) {
+                Log.e(TAG, Log.getStackTraceString(e));
+            }
+            
+            @Override
+            public void onMalformedURLException(MalformedURLException e, 
+                    Object state) {
+                Log.e(TAG, Log.getStackTraceString(e));
+            }
+            
+        });
+    }
     
 }

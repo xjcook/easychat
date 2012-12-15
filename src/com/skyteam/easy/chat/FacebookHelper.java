@@ -1,22 +1,10 @@
 package com.skyteam.easy.chat;
 
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.net.MalformedURLException;
-
-import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
-import android.os.Bundle;
-import android.util.Log;
 
-import com.facebook.android.AsyncFacebookRunner;
-import com.facebook.android.DialogError;
 import com.facebook.android.Facebook;
-import com.facebook.android.FacebookError;
-import com.facebook.android.AsyncFacebookRunner.RequestListener;
-import com.facebook.android.Facebook.DialogListener;
 
 public class FacebookHelper {
     
@@ -26,84 +14,6 @@ public class FacebookHelper {
     public static final String TOKEN = "access_token";
     public static final String EXPIRES = "access_expires";
     public static final String KEY = "facebook-session";
-    private Context context;
-    private Facebook facebook;
-    private AsyncFacebookRunner mAsyncRunner;
-    
-    public FacebookHelper(Context context, Facebook facebook) {
-        this.context = context;
-        this.facebook = facebook;
-        this.mAsyncRunner = new AsyncFacebookRunner(this.facebook);
-    }
-    
-    public void login() {        
-        if (! sessionRestore(facebook, context)) {
-            facebook.authorize((Activity) context, PERMISSIONS, new DialogListener() {
-            
-                @Override
-                public void onComplete(Bundle values) {
-                    Log.v(TAG, "Facebook logged in");
-    
-                    // Save token
-                    sessionSave(facebook, context);
-                }
-                
-                @Override
-                public void onCancel() {
-                    Log.v(TAG, "Facebook login cancelled");
-                    /* TODO what happens if user cancel authorize */
-                }
-                
-                @Override
-                public void onFacebookError(FacebookError e) {
-                    Log.e(TAG, Log.getStackTraceString(e));
-                }
-                
-                @Override
-                public void onError(DialogError e) {
-                    Log.e(TAG, Log.getStackTraceString(e));
-                }
-                    
-            });
-        }   
-    }
-    
-    public void logout() {
-        // Invalidate token in shared preferences
-        sessionClear(context);
-        
-        // Facebook logout
-        mAsyncRunner.logout((Activity) context, new RequestListener() {
-            
-            @Override
-            public void onComplete(String response, Object state) {
-                Log.v(TAG, "Facebook logged out");
-            }
-            
-            @Override
-            public void onFacebookError(FacebookError e, Object state) {
-                Log.e(TAG, Log.getStackTraceString(e));
-            }
-            
-            @Override
-            public void onIOException(IOException e, Object state) {
-                Log.e(TAG, Log.getStackTraceString(e));
-            }
-            
-            @Override
-            public void onFileNotFoundException(FileNotFoundException e, 
-                    Object state) {
-                Log.e(TAG, Log.getStackTraceString(e));
-            }
-            
-            @Override
-            public void onMalformedURLException(MalformedURLException e, 
-                    Object state) {
-                Log.e(TAG, Log.getStackTraceString(e));
-            }
-            
-        });
-    }
     
     public static boolean sessionSave(Facebook session, Context context) {
         Editor editor =

@@ -2,6 +2,7 @@ package com.skyteam.easy.chat;
 
 import org.jivesoftware.smack.Chat;
 import org.jivesoftware.smack.ChatManager;
+import org.jivesoftware.smack.ChatManagerListener;
 import org.jivesoftware.smack.ConnectionConfiguration;
 import org.jivesoftware.smack.MessageListener;
 import org.jivesoftware.smack.Roster;
@@ -27,10 +28,28 @@ public class ChatService extends Service {
     private XMPPConnection xmpp;
     private String mAccessToken;
     
+    private MessageListener mMessageListener = new MessageListener() {
+        
+        @Override
+        public void processMessage(Chat chat, Message message) {
+            String body = message.getBody();
+            
+            if (body != null) {
+                Log.v(TAG, "Received message: " + body);
+                Intent intent = new Intent(ConversationFragment.ACTION);
+                intent.putExtra(ConversationFragment.USER, chat.getParticipant());
+                intent.putExtra(ConversationFragment.MESSAGE, body);
+                LocalBroadcastManager.getInstance(getApplicationContext())
+                        .sendBroadcast(intent);
+            }
+        }
+        
+    };
+    
     @Override
     public void onCreate() {  
         ConnectionConfiguration config = new ConnectionConfiguration(SERVER, PORT);
-        config.setDebuggerEnabled(false);
+        config.setDebuggerEnabled(true);
         config.setSASLAuthenticationEnabled(true);
         xmpp = new XMPPConnection(config);
         SASLAuthentication.registerSASLMechanism("X-FACEBOOK-PLATFORM", 
@@ -40,9 +59,10 @@ public class ChatService extends Service {
     
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        Log.i(TAG, "Starting service");
+        Log.i(TAG, "Received start id " + startId + ": " + intent);
         mAccessToken = intent.getStringExtra(FacebookHelper.TOKEN);
         connect();
-        Log.i(TAG, "Received start id " + startId + ": " + intent);
         return START_STICKY;
     }
     
@@ -54,6 +74,7 @@ public class ChatService extends Service {
     
     @Override
     public void onDestroy() {
+        Log.i(TAG, "Service is killed");
         disconnect();                
     }
     
@@ -78,12 +99,12 @@ public class ChatService extends Service {
             public void run() {
                 for (;;) {
                     try {        
-                        if (! xmpp.isConnected()) {
-                            xmpp.connect();
-                            Thread.sleep(MainActivity.SLEEP_TIME);
-                        } else {
+                        if (xmpp.isConnected()) {
                             login(FacebookHelper.APPID, mAccessToken);
                             return;
+                        } else {
+                            xmpp.connect();
+                            Thread.sleep(MainActivity.SLEEP_TIME);
                         }    
                     } catch (XMPPException e) {
                         Log.e(TAG, Log.getStackTraceString(e));
@@ -108,6 +129,7 @@ public class ChatService extends Service {
                 for (;;) {
                     try {                        
                         if (xmpp.isAuthenticated()) { 
+                            listenChat();
                             return;
                         } else {
                             xmpp.login(appId, accessToken, "Easy Chat");
@@ -126,29 +148,32 @@ public class ChatService extends Service {
         }).start();
     }
     
-    public void sendMessage(String user, String message) throws XMPPException {
-        if (xmpp.isConnected() && xmpp.isAuthenticated()) {        
-            ChatManager chatManager = xmpp.getChatManager();
-            Chat chat = chatManager.createChat(user, new MessageListener() {
+    private void listenChat() {
+        if (xmpp.isConnected()) {
+            xmpp.getChatManager().addChatListener(new ChatManagerListener() {
                 
                 @Override
-                public void processMessage(Chat chat, Message message) {
-                    String body = message.getBody();
-                    
-                    if (body != null) {
-                        Log.v(TAG, "Received message: " + body);
-                        Intent intent = new Intent(ConversationFragment.ACTION);
-                        intent.putExtra(ConversationFragment.MESSAGE, body);
-                        LocalBroadcastManager.getInstance(getApplicationContext())
-                                .sendBroadcast(intent);
+                public void chatCreated(Chat chat, boolean createdLocally) {
+                    if (! createdLocally) {
+                        chat.addMessageListener(mMessageListener);
                     }
                 }
                 
             });
-            
+        } else {
+            // TODO connect and listen
+            Log.e(TAG, "listenChat is not connected!");
+        }
+    }
+    
+    public void sendMessage(String user, String message) throws XMPPException {
+        if (xmpp.isConnected() && xmpp.isAuthenticated()) {        
+            ChatManager chatManager = xmpp.getChatManager();
+            Chat chat = chatManager.createChat(user, mMessageListener);
             chat.sendMessage(message);
         } else {
             // TODO connect and send message
+            Log.e(TAG, "sendMessage() is not connected!");
         }
     }
     
