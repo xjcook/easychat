@@ -57,25 +57,31 @@ public class ChatHistory {
         mOpenHelper = new DatabaseHelper(context);
     }
     
-    public Cursor getMessages() {
+    public Cursor getMessages(String user) {
         SQLiteDatabase db = mOpenHelper.getReadableDatabase();
-        return db.query(TABLE_NAME, columns, null, null, null, null, ORDER_BY);
-    }
-    
-    public Cursor getMessage(long id) {
-        SQLiteDatabase db = mOpenHelper.getReadableDatabase();
-        String[] selectionArgs = { String.valueOf(id) };
-        return db.query(TABLE_NAME, columns, COLUMN_ID + "= ?", selectionArgs, 
+        String[] selectionArgs = { user };
+        return db.query(TABLE_NAME, columns, COLUMN_USER + "= ?", selectionArgs, 
                         null, null, ORDER_BY);
     }
     
-    public boolean deleteMessage(long id) {
-        SQLiteDatabase db = mOpenHelper.getReadableDatabase();
+    public Cursor getMessage(String user, long id) {
+        // TODO implement getMessage
+        /*SQLiteDatabase db = mOpenHelper.getReadableDatabase();
+        String[] selectionArgs = { String.valueOf(id) };
+        return db.query(TABLE_NAME, columns, COLUMN_ID + "= ?", selectionArgs, 
+                        null, null, ORDER_BY);*/
+        return null;
+    }
+    
+    public boolean deleteMessage(String user, long id) {
+        // TODO implement deleteMessage
+        /*SQLiteDatabase db = mOpenHelper.getReadableDatabase();
         String[] selectionArgs = { String.valueOf(id) };
         
         int deletedCount = db.delete(TABLE_NAME, COLUMN_ID + "= ?", selectionArgs);
         db.close();
-        return deletedCount > 0;
+        return deletedCount > 0;*/
+        return false;
     }
     
     public long insertMessage(String user, String message) {

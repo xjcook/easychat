@@ -32,7 +32,8 @@ public class ChatService extends Service {
     private final IBinder mBinder = new LocalBinder();
     private XMPPConnection xmpp;
     private String mAccessToken;
-    
+    private int mNotifyID = 1;
+
     private MessageListener mMessageListener = new MessageListener() {
         
         @Override
@@ -55,8 +56,6 @@ public class ChatService extends Service {
         }
         
     };
-    
-    private int mNotifyID = 1;
     
     @Override
     public void onCreate() {  
