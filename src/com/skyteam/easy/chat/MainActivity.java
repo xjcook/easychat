@@ -5,9 +5,9 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 
 import android.content.Intent;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
-import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.util.Log;
 import android.view.Menu;
@@ -51,55 +51,19 @@ public class MainActivity extends FragmentActivity {
         
         // If first time loaded
         if (savedInstanceState == null) {
-            // Log In to Facebook
+            // Log In to Facebook and start ChatService
             loginToFacebook();
-            
-            // Start ChatService when logged to Facebook
-            new Thread(new Runnable() {
-                
-                @Override
-                public void run() {
-                    for (;;) {
-                        try {
-                            if (facebook.isSessionValid()) {
-                                Intent intent = new Intent(MainActivity.this, 
-                                        ChatService.class);
-                                intent.putExtra(FacebookHelper.TOKEN, 
-                                        facebook.getAccessToken());
-                                startService(intent);
-                                return;
-                            } else {
-                                Thread.sleep(SLEEP_TIME);
-                            }                        
-                        } catch (InterruptedException e) {
-                            Log.e(TAG, Log.getStackTraceString(e));
-                        }
-                    }                
-                }
-                
-            }).start();
+            new StartChatServiceTask().execute();
+        } else {
+            // Restore facebook session
+            FacebookHelper.sessionRestore(facebook, this);
         }
     }
     
     @Override
-    protected void onStart() {
-        super.onStart();
-    }
-    
-    @Override
-    protected void onPause() {
-        super.onPause();
-    }
-
-    @Override
     public void onResume() {
         super.onResume();
         facebook.extendAccessToken(this, null);
-    }
-    
-    @Override
-    protected void onStop() {
-        super.onStop();
     }
 
     @Override
@@ -107,11 +71,7 @@ public class MainActivity extends FragmentActivity {
         super.onDestroy();
         
         if (isFinishing()) {
-            // Log Out from Facebook
-            /*mFacebookHelper.logout();*/
-            // Stop ChatService 
-            /*Intent intent = new Intent(this, ChatService.class);
-            stopService(intent);*/
+            // if app is finishing (not restarting) what to do
         }
     }
     
@@ -147,20 +107,30 @@ public class MainActivity extends FragmentActivity {
     
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        //FragmentTransaction transaction;
-
+        
         switch (item.getItemId()) {
             
         // Log In
         case R.id.menu_login:
+            // Log In to Facebook and start ChatService
             loginToFacebook();
+            new StartChatServiceTask().execute();
             
-            /*if (findViewById(R.id.first_pane) != null) {
-                new ShowPeopleTask().execute();
-            }
-            
-            if (findViewById(R.id.second_pane) != null) {
-                new ShowMessagesTask().execute();
+            // TODO Replace fragments
+            /*if (mDualPane) {
+                PeopleFragment peopleFragment = new PeopleFragment();
+                MessagesFragment messagesFragment = new MessagesFragment();
+                FragmentTransaction transaction = getSupportFragmentManager()
+                        .beginTransaction();
+                transaction.replace(R.id.people, peopleFragment);
+                transaction.replace(R.id.messages, messagesFragment, MessagesFragment.TAG);
+                transaction.commit();
+            } else {
+                PeopleFragment peopleFragment = new PeopleFragment();
+                FragmentTransaction transaction = getSupportFragmentManager()
+                        .beginTransaction();
+                transaction.replace(R.id.people, peopleFragment);
+                transaction.commit();
             }*/
             
             return true;
@@ -169,15 +139,20 @@ public class MainActivity extends FragmentActivity {
         case R.id.menu_logout:
             // Chat & Facebook logout 
             logoutFromFacebook();
-            //mChat.logout();  
+            stopService(new Intent(this, ChatService.class));
             
-            // Clear fragments
-            /*if (peopleFragment != null)
+            PeopleFragment peopleFragment = (PeopleFragment) getSupportFragmentManager()
+                    .findFragmentById(R.id.people);
+            MessagesFragment messagesFragment = (MessagesFragment) getSupportFragmentManager()
+                    .findFragmentByTag(MessagesFragment.TAG);
+            
+            if (peopleFragment != null) {
                 peopleFragment.clear();
-            if (messagesFragment != null)
+            }
+            
+            if (messagesFragment != null) {
                 messagesFragment.clear();
-            if (conversationFragment != null)
-                conversationFragment.clear();*/
+            }
             
             return true;
         
@@ -272,6 +247,30 @@ public class MainActivity extends FragmentActivity {
             }
             
         });
+    }
+    
+    private class StartChatServiceTask extends AsyncTask<Void, Void, Void> {
+
+        @Override
+        protected Void doInBackground(Void... params) {
+            for (;;) {
+                try {
+                    if (facebook.isSessionValid()) {
+                        Intent intent = new Intent(MainActivity.this, 
+                                ChatService.class);
+                        intent.putExtra(FacebookHelper.TOKEN, 
+                                facebook.getAccessToken());
+                        startService(intent);
+                        return null;
+                    } else {
+                        Thread.sleep(SLEEP_TIME);
+                    }                        
+                } catch (InterruptedException e) {
+                    Log.e(TAG, Log.getStackTraceString(e));
+                }
+            }                
+        }
+        
     }
     
 }
