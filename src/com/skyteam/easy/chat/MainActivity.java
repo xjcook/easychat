@@ -20,10 +20,8 @@ import com.facebook.android.Facebook;
 import com.facebook.android.FacebookError;
 import com.facebook.android.AsyncFacebookRunner.RequestListener;
 import com.facebook.android.Facebook.DialogListener;
-import com.skyteam.easy.chat.PeopleFragment.PeopleFragmentListener;
 
-public class MainActivity extends FragmentActivity 
-    implements PeopleFragmentListener {
+public class MainActivity extends FragmentActivity {
 
     public static final String TAG = "MainActivity";
     public static final String ACTION = "show.people";
@@ -207,38 +205,12 @@ public class MainActivity extends FragmentActivity
             
         }
     }
-
-    @Override
-    public void onPeopleSelected(String user) {
-        showConversation(user);        
-    }
     
     public void onSendMessageButtonClick(View button) {
         ConversationFragment f = (ConversationFragment) getSupportFragmentManager()
                 .findFragmentByTag(ConversationFragment.TAG);
         f.sendMessage();
     } 
-    
-    public void showConversation(String user) {        
-        if (mDualPane) {
-            // Replace MessagesFragment to ConversationFragment
-            Bundle args = new Bundle();
-            args.putString(ConversationFragment.USER, user);
-            ConversationFragment conversationFragment = new ConversationFragment(); 
-            conversationFragment.setArguments(args);
-            FragmentTransaction transaction = getSupportFragmentManager()
-                    .beginTransaction();
-            transaction.replace(R.id.messages, conversationFragment, 
-                    ConversationFragment.TAG);
-            transaction.addToBackStack(null);
-            transaction.commit();
-        } else {
-            // Start new ConversationActivity
-            Intent intent = new Intent(this, ConversationActivity.class);
-            intent.putExtra(ConversationActivity.USER, user);
-            startActivity(intent);
-        }
-    }
 
     public void loginToFacebook() {        
         if (! FacebookHelper.sessionRestore(facebook, this)) {

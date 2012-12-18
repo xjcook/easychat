@@ -13,6 +13,7 @@ import android.content.ServiceConnection;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v4.app.ListFragment;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -25,6 +26,7 @@ import android.widget.ListView;
 
 public class PeopleFragment extends ListFragment {
 
+    public static final String TAG = "PeopleFragment";
     private EditText mFilterText;
     
     /* Chat Service */
@@ -47,25 +49,6 @@ public class PeopleFragment extends ListFragment {
      
     };
     
-    public interface PeopleFragmentListener {
-        public void onPeopleSelected(String user);
-    }
-    
-    public static final String TAG = "PeopleFragment";
-    private PeopleFragmentListener mListener;
-    
-    @Override
-    public void onAttach(Activity activity) {
-        super.onAttach(activity);
-        
-        try {
-            mListener = (PeopleFragmentListener) activity;
-        } catch (ClassCastException e) {
-            throw new ClassCastException(activity.toString() + 
-                    " must implement PeopleFragmentListener");
-        }
-    }
-
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
             Bundle savedInstanceState) {
@@ -116,7 +99,7 @@ public class PeopleFragment extends ListFragment {
 	public void onListItemClick(ListView l, View v, int position, long id) {
 		super.onListItemClick(l, v, position, id);
 		RosterEntry entry = (RosterEntry) getListAdapter().getItem(position);
-    	mListener.onPeopleSelected(entry.getUser());
+    	showConversation(entry.getUser());
 	}
     
 	public void show(Collection<RosterEntry> entries) {
@@ -127,6 +110,31 @@ public class PeopleFragment extends ListFragment {
     public void clear() {
 		setListAdapter(null);
 	}
+    
+    public void showConversation(String user) {       
+        // Check dualView
+        View messagesFrame = getActivity().findViewById(R.id.messages);
+        boolean dualPane = messagesFrame != null && messagesFrame.getVisibility() == View.VISIBLE;
+        
+        if (dualPane) {
+            // Replace MessagesFragment to ConversationFragment
+            Bundle args = new Bundle();
+            args.putString(ConversationFragment.USER, user);
+            ConversationFragment conversationFragment = new ConversationFragment(); 
+            conversationFragment.setArguments(args);
+            FragmentTransaction transaction = getActivity().getSupportFragmentManager()
+                    .beginTransaction();
+            transaction.replace(R.id.messages, conversationFragment, 
+                    ConversationFragment.TAG);
+            transaction.addToBackStack(null);
+            transaction.commit();
+        } else {
+            // Start new ConversationActivity
+            Intent intent = new Intent(getActivity(), ConversationActivity.class);
+            intent.putExtra(ConversationActivity.USER, user);
+            startActivity(intent);
+        }
+    }
     
     private class ShowPeopleTask extends AsyncTask<Void, Void, Collection<RosterEntry>> {
 
@@ -157,8 +165,9 @@ public class PeopleFragment extends ListFragment {
         
         @Override
         public void onTextChanged(CharSequence s, int start, int before, int count) {
-            PeopleAdapter adapter = (PeopleAdapter) getListAdapter();
-            adapter.getFilter().filter(s);
+            // TODO make proper filter without orientation crash
+            /*PeopleAdapter adapter = (PeopleAdapter) getListAdapter();
+            adapter.getFilter().filter(s);*/
         }
         
         @Override
