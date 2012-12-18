@@ -4,12 +4,17 @@ import java.util.ArrayList;
 
 import org.jivesoftware.smack.XMPPException;
 
+import com.skyteam.easy.chat.ChatService.LocalBinder;
+
 import android.content.BroadcastReceiver;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.ServiceConnection;
 import android.database.Cursor;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
@@ -45,6 +50,26 @@ public class ConversationFragment extends Fragment {
             mChatHistory.insertMessage(user, message);
         }
         
+    };
+    
+    /* Chat Service */
+    public boolean mIsBound = false;
+    public ChatService mChatService; 
+    private ServiceConnection mConnection = new ServiceConnection() {
+     
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            LocalBinder binder = (LocalBinder) service;
+            mChatService = binder.getService();  
+            mIsBound = true;
+        }
+        
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            Log.e(TAG, "onServiceDisconnected");
+            mIsBound = false;
+        }
+     
     };
     
 	@Override
@@ -98,12 +123,22 @@ public class ConversationFragment extends Fragment {
     public void onStart() {
         super.onStart();
         isRunning = true;
+        
+        // Bind to ChatService
+        Intent intent = new Intent(getActivity(), ChatService.class);
+        getActivity().bindService(intent, mConnection, 0);
     }
 
     @Override
     public void onStop() {
         super.onStop();
         isRunning = false;
+        
+        // Unbind from ChatService
+        if (mIsBound) {
+            getActivity().unbindService(mConnection);
+            mIsBound = false;
+        }
     }
 
     @Override
@@ -114,20 +149,24 @@ public class ConversationFragment extends Fragment {
         super.onDestroy();
     }
     
-    public void sendMessage(ChatService service) {
-        EditText editText = (EditText) getView().findViewById(R.id.message_edittext);
-        String user = getArguments().getString(USER);
-        String message = editText.getText().toString();
-        
-        try {
-            service.sendMessage(user, message);
-        } catch (XMPPException e) {
-            Log.e(TAG, Log.getStackTraceString(e));
+    public void sendMessage() {
+        if (mIsBound) {
+            EditText editText = (EditText) getView().findViewById(R.id.message_edittext);
+            String user = getArguments().getString(USER);
+            String message = editText.getText().toString();
+            
+            try {
+                mChatService.sendMessage(user, message);
+            } catch (XMPPException e) {
+                Log.e(TAG, Log.getStackTraceString(e));
+            }
+            
+            messages.add(message);
+            mAdapter.notifyDataSetChanged();
+            mChatHistory.insertMessage(user, message);
+        } else {
+            Log.e(TAG, "Service is not bound!");
         }
-        
-        messages.add(message);
-        mAdapter.notifyDataSetChanged();
-        mChatHistory.insertMessage(user, message);
     }
     
     public void show() {

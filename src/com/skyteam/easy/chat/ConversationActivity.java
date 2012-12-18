@@ -1,44 +1,21 @@
 package com.skyteam.easy.chat;
 
-import com.skyteam.easy.chat.ChatService.LocalBinder;
+import com.skyteam.easy.chat.PeopleFragment.PeopleFragmentListener;
 
-import android.content.ComponentName;
 import android.content.Intent;
-import android.content.ServiceConnection;
 import android.os.Bundle;
-import android.os.IBinder;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
-import android.util.Log;
 import android.view.View;
 
-public class ConversationActivity extends FragmentActivity {
+public class ConversationActivity extends FragmentActivity 
+    implements PeopleFragmentListener {
     
     public static final String TAG = "ConversationActivity";
     public static final String USER = ConversationFragment.USER;
     public static final String MESSAGE = ConversationFragment.MESSAGE;
     
-    /* Chat Service */
-    public boolean mIsBound = false;
-    public ChatService mChatService; 
-    private ServiceConnection mConnection = new ServiceConnection() {
-     
-        @Override
-        public void onServiceConnected(ComponentName name, IBinder service) {
-            LocalBinder binder = (LocalBinder) service;
-            mChatService = binder.getService();  
-            mIsBound = true;
-        }
-        
-        @Override
-        public void onServiceDisconnected(ComponentName name) {
-            Log.e(TAG, "onServiceDisconnected");
-            mIsBound = false;
-        }
-     
-    };
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -46,9 +23,9 @@ public class ConversationActivity extends FragmentActivity {
         
         // Get user, message from Activity Intent to Bundle arguments
         Intent intent = getIntent();
-        Bundle bundle = new Bundle();
-        bundle.putString(USER, intent.getStringExtra(USER));
-        bundle.putString(MESSAGE, intent.getStringExtra(MESSAGE));
+        Bundle args = new Bundle();
+        args.putString(USER, intent.getStringExtra(USER));
+        args.putString(MESSAGE, intent.getStringExtra(MESSAGE));
         
         // Check if fragment exists, add or replace fragment to Activity View
         FragmentManager manager = getSupportFragmentManager();
@@ -58,12 +35,12 @@ public class ConversationActivity extends FragmentActivity {
         
         if (fragment != null) {
             // Replace existing fragment
-            fragment.setArguments(bundle);
+            fragment.setArguments(args);
             transaction.replace(R.id.conversation, fragment, ConversationFragment.TAG);
         } else {
             // Use Activity Intent to create new Fragment
             fragment = new ConversationFragment();
-            fragment.setArguments(bundle);
+            fragment.setArguments(args);
             // Add new fragment
             transaction.add(R.id.conversation, fragment, ConversationFragment.TAG);
         }
@@ -74,31 +51,22 @@ public class ConversationActivity extends FragmentActivity {
     @Override
     protected void onStart() {
         super.onStart();
-        
-        // Bind to ChatService
-        Intent intent = new Intent(this, ChatService.class);
-        bindService(intent, mConnection, 0);
     }
 
     @Override
     protected void onStop() {
         super.onStop();
+    }
+    
+    @Override
+    public void onPeopleSelected(String user) {
         
-        // Unbind from ChatService
-        if (mIsBound) {
-            unbindService(mConnection);
-            mIsBound = false;
-        }
     }
 
     public void onSendMessageButtonClick(View button) {
-        if (mIsBound) {
-            ConversationFragment f = (ConversationFragment) getSupportFragmentManager()
-                    .findFragmentByTag(ConversationFragment.TAG);
-            f.sendMessage(mChatService);
-        } else {
-            Log.e(TAG, "Service is not bound!");
-        }
+        ConversationFragment f = (ConversationFragment) getSupportFragmentManager()
+                .findFragmentByTag(ConversationFragment.TAG);
+        f.sendMessage();
     } 
     
 }

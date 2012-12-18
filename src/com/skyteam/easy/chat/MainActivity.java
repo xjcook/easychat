@@ -4,11 +4,8 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.MalformedURLException;
 
-import android.content.ComponentName;
 import android.content.Intent;
-import android.content.ServiceConnection;
 import android.os.Bundle;
-import android.os.IBinder;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
@@ -23,7 +20,6 @@ import com.facebook.android.Facebook;
 import com.facebook.android.FacebookError;
 import com.facebook.android.AsyncFacebookRunner.RequestListener;
 import com.facebook.android.Facebook.DialogListener;
-import com.skyteam.easy.chat.ChatService.LocalBinder;
 import com.skyteam.easy.chat.PeopleFragment.PeopleFragmentListener;
 
 public class MainActivity extends FragmentActivity 
@@ -35,26 +31,6 @@ public class MainActivity extends FragmentActivity
     private final Facebook facebook = new Facebook(FacebookHelper.APPID);
     private final AsyncFacebookRunner mAsyncRunner = new AsyncFacebookRunner(facebook);
     private boolean mDualPane;
-    
-    /* Chat Service */
-    public boolean mIsBound = false;
-    public ChatService mChatService; 
-    private ServiceConnection mConnection = new ServiceConnection() {
-     
-        @Override
-        public void onServiceConnected(ComponentName name, IBinder service) {
-            LocalBinder binder = (LocalBinder) service;
-            mChatService = binder.getService();  
-            mIsBound = true;
-        }
-        
-        @Override
-        public void onServiceDisconnected(ComponentName name) {
-            Log.e(TAG, "onServiceDisconnected");
-            mIsBound = false;
-        }
-     
-    };
     
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -92,11 +68,12 @@ public class MainActivity extends FragmentActivity
         // Check dualView
         View messagesFrame = findViewById(R.id.messages);
         mDualPane = messagesFrame != null && messagesFrame.getVisibility() == View.VISIBLE;
-        
+
         // If dual view then show MessagesFragment
         if (mDualPane) {
             FragmentManager manager = getSupportFragmentManager();
             FragmentTransaction transaction = manager.beginTransaction();
+            
             MessagesFragment messagesFragment = (MessagesFragment) manager
                     .findFragmentByTag(MessagesFragment.TAG);
             
@@ -111,23 +88,11 @@ public class MainActivity extends FragmentActivity
 
             transaction.commit();
         }
-        
-        // Get user from Activity Intent
-        String user = getIntent().getStringExtra(ConversationFragment.USER);
-        
-        if (user != null) {
-            showConversation(user);
-        }
     }
     
     @Override
     protected void onStart() {
         super.onStart();
-        
-        // Bind to ChatService
-        Intent intent = new Intent(MainActivity.this, 
-                ChatService.class);
-        bindService(intent, mConnection, 0);
     }
     
     @Override
@@ -144,12 +109,6 @@ public class MainActivity extends FragmentActivity
     @Override
     protected void onStop() {
         super.onStop();
-        
-        // Unbind from ChatService
-        if (mIsBound) {
-            unbindService(mConnection);
-            mIsBound = false;
-        }
     }
 
     @Override
@@ -255,13 +214,9 @@ public class MainActivity extends FragmentActivity
     }
     
     public void onSendMessageButtonClick(View button) {
-        if (mIsBound) {
-            ConversationFragment f = (ConversationFragment) getSupportFragmentManager()
-                    .findFragmentByTag(ConversationFragment.TAG);
-            f.sendMessage(mChatService);
-        } else {
-            Log.e(TAG, "Service is not bound!");
-        }
+        ConversationFragment f = (ConversationFragment) getSupportFragmentManager()
+                .findFragmentByTag(ConversationFragment.TAG);
+        f.sendMessage();
     } 
     
     public void showConversation(String user) {        

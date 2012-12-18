@@ -209,6 +209,8 @@ public class ChatService extends Service {
         NotificationManager notificationManager = (NotificationManager) 
                 getSystemService(Context.NOTIFICATION_SERVICE);
         notificationManager.notify(mNotifyID++, builder.build());
+        
+        // TODO delete notification after click
     }
     
     public boolean isConnected() {

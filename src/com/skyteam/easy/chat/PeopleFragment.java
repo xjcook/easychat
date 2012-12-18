@@ -4,9 +4,15 @@ import java.util.Collection;
 
 import org.jivesoftware.smack.RosterEntry;
 
+import com.skyteam.easy.chat.ChatService.LocalBinder;
+
 import android.app.Activity;
+import android.content.ComponentName;
+import android.content.Intent;
+import android.content.ServiceConnection;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.support.v4.app.ListFragment;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -20,6 +26,26 @@ import android.widget.ListView;
 public class PeopleFragment extends ListFragment {
 
     private EditText mFilterText;
+    
+    /* Chat Service */
+    public boolean mIsBound = false;
+    public ChatService mChatService; 
+    private ServiceConnection mConnection = new ServiceConnection() {
+     
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            LocalBinder binder = (LocalBinder) service;
+            mChatService = binder.getService();  
+            mIsBound = true;
+        }
+        
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            Log.e(TAG, "onServiceDisconnected");
+            mIsBound = false;
+        }
+     
+    };
     
     public interface PeopleFragmentListener {
         public void onPeopleSelected(String user);
@@ -59,6 +85,26 @@ public class PeopleFragment extends ListFragment {
 	}
     
 	@Override
+    public void onStart() {
+        super.onStart();
+        
+        // Bind to ChatService
+        Intent intent = new Intent(getActivity(), ChatService.class);
+        getActivity().bindService(intent, mConnection, 0);
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        
+        // Unbind from ChatService
+        if (mIsBound) {
+            getActivity().unbindService(mConnection);
+            mIsBound = false;
+        }
+    }
+
+    @Override
     public void onDestroy() {
 	    super.onDestroy();
    
@@ -85,15 +131,10 @@ public class PeopleFragment extends ListFragment {
     private class ShowPeopleTask extends AsyncTask<Void, Void, Collection<RosterEntry>> {
 
         @Override
-        protected Collection<RosterEntry> doInBackground(Void... params) {            
+        protected Collection<RosterEntry> doInBackground(Void... params) { 
             for (;;) {
-                // Get ChatService from MainActivity
-                MainActivity activity = (MainActivity) getActivity();
-                ChatService chatService = activity.mChatService;
-                boolean isBound = activity.mIsBound;
-                
-                if (isBound && chatService.isAuthenticated()) {
-                    return chatService.getRoster().getEntries();
+                if (mIsBound && mChatService.isAuthenticated()) {
+                    return mChatService.getRoster().getEntries();
                 } else {
                     try {
                         Thread.sleep(MainActivity.SLEEP_TIME);

@@ -49,6 +49,7 @@ public class ConversationAdapter extends ArrayAdapter<String> {
     @Override
     public void notifyDataSetChanged() {
         // Sort by newest messages
+        // TODO remove reversed messages + add scrollbar to newest messages
         Collections.reverse(messages);
         super.notifyDataSetChanged();
     }
