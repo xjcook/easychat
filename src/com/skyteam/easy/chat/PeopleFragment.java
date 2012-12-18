@@ -19,6 +19,8 @@ import android.widget.ListView;
 
 public class PeopleFragment extends ListFragment {
 
+    private EditText mFilterText;
+    
     public interface PeopleFragmentListener {
         public void onPeopleSelected(String user);
     }
@@ -49,8 +51,8 @@ public class PeopleFragment extends ListFragment {
 		super.onActivityCreated(savedInstanceState);
         
         // Add TextWatcher Listener
-        EditText filterText = (EditText) getView().findViewById(R.id.people_filter_edittext);
-        filterText.addTextChangedListener(mFilterTextWatcher);
+        mFilterText = (EditText) getView().findViewById(R.id.people_filter_edittext);
+        mFilterText.addTextChangedListener(mFilterTextWatcher);
         
         // Start ShowPeopleTask
         new ShowPeopleTask().execute();
@@ -58,11 +60,10 @@ public class PeopleFragment extends ListFragment {
     
 	@Override
     public void onDestroy() {
-	    // Remove TextWatcher Listener
-	    EditText filterText = (EditText) getView().findViewById(R.id.people_filter_edittext);
-	    filterText.removeTextChangedListener(mFilterTextWatcher);
-	    
 	    super.onDestroy();
+   
+	    // Remove TextWatcher Listener
+	    mFilterText.removeTextChangedListener(mFilterTextWatcher);
     }
 
     @Override

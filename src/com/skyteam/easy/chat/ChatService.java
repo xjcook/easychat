@@ -11,7 +11,6 @@ import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.packet.Message;
 
-import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
@@ -33,7 +32,6 @@ public class ChatService extends Service {
     private final IBinder mBinder = new LocalBinder();
     private XMPPConnection xmpp;
     private String mAccessToken;
-    
     private MessageListener mMessageListener = new MessageListener() {
         
         @Override
@@ -185,20 +183,25 @@ public class ChatService extends Service {
     }
     
     public void createNotification(String user, String message) {
-        NotificationCompat.Builder builder = new NotificationCompat.Builder(this)
+        NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(this)
                 .setSmallIcon(R.drawable.ic_notification)
                 .setContentTitle(user)
                 .setContentText(message);
-        Intent resultIntent = new Intent(this, MainActivity.class);
-        resultIntent.putExtra(ConversationFragment.USER, user);
+        
+        Intent resultIntent = new Intent(this, ConversationActivity.class);
+        resultIntent.putExtra(ConversationActivity.USER, user);
+        
         TaskStackBuilder stackBuilder = TaskStackBuilder.create(this);
-        stackBuilder.addParentStack(MainActivity.class);
+        stackBuilder.addParentStack(ConversationActivity.class);
         stackBuilder.addNextIntent(resultIntent);
+        
         PendingIntent resultPendingIntent = stackBuilder.getPendingIntent(0, 
                 PendingIntent.FLAG_UPDATE_CURRENT);
-        builder.setContentIntent(resultPendingIntent);
-        NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-        notificationManager.notify(12345, builder.build());
+        mBuilder.setContentIntent(resultPendingIntent);
+        
+        NotificationManager mNotificationManager = (NotificationManager) 
+                getSystemService(Context.NOTIFICATION_SERVICE);
+        mNotificationManager.notify(12345, mBuilder.build());
     }
     
     public boolean isConnected() {
