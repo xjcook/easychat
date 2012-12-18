@@ -35,56 +35,49 @@ public class MainActivity extends FragmentActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main_activity);
         
-        // Log In to Facebook
-        loginToFacebook();
-        
-        // Start ChatService when logged to Facebook
-        new Thread(new Runnable() {
-            
-            @Override
-            public void run() {
-                for (;;) {
-                    try {
-                        if (facebook.isSessionValid()) {
-                            Intent intent = new Intent(MainActivity.this, 
-                                    ChatService.class);
-                            intent.putExtra(FacebookHelper.TOKEN, 
-                                    facebook.getAccessToken());
-                            startService(intent);
-                            return;
-                        } else {
-                            Thread.sleep(SLEEP_TIME);
-                        }                        
-                    } catch (InterruptedException e) {
-                        Log.e(TAG, Log.getStackTraceString(e));
-                    }
-                }                
-            }
-            
-        }).start();
-        
         // Check dualView
         View messagesFrame = findViewById(R.id.messages);
         mDualPane = messagesFrame != null && messagesFrame.getVisibility() == View.VISIBLE;
 
         // If dual view then show MessagesFragment
         if (mDualPane) {
-            FragmentManager manager = getSupportFragmentManager();
-            FragmentTransaction transaction = manager.beginTransaction();
-            
-            MessagesFragment messagesFragment = (MessagesFragment) manager
-                    .findFragmentByTag(MessagesFragment.TAG);
-            
-            if (messagesFragment != null) {
-                // Replace existing fragment
-                transaction.replace(R.id.messages, messagesFragment, MessagesFragment.TAG);
-            } else {
-                // Add new fragment
-                messagesFragment = new MessagesFragment();
-                transaction.add(R.id.messages, messagesFragment, MessagesFragment.TAG);
-            }
-
+            // Replace Messages Frame by fragment
+            FragmentTransaction transaction = getSupportFragmentManager()
+                    .beginTransaction();
+            MessagesFragment messagesFragment = new MessagesFragment();
+            transaction.replace(R.id.messages, messagesFragment, MessagesFragment.TAG);
             transaction.commit();
+        }
+        
+        // If first time loaded
+        if (savedInstanceState == null) {
+            // Log In to Facebook
+            loginToFacebook();
+            
+            // Start ChatService when logged to Facebook
+            new Thread(new Runnable() {
+                
+                @Override
+                public void run() {
+                    for (;;) {
+                        try {
+                            if (facebook.isSessionValid()) {
+                                Intent intent = new Intent(MainActivity.this, 
+                                        ChatService.class);
+                                intent.putExtra(FacebookHelper.TOKEN, 
+                                        facebook.getAccessToken());
+                                startService(intent);
+                                return;
+                            } else {
+                                Thread.sleep(SLEEP_TIME);
+                            }                        
+                        } catch (InterruptedException e) {
+                            Log.e(TAG, Log.getStackTraceString(e));
+                        }
+                    }                
+                }
+                
+            }).start();
         }
     }
     

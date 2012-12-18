@@ -23,12 +23,11 @@ public class ConversationActivity extends FragmentActivity {
         args.putString(USER, intent.getStringExtra(USER));
         args.putString(MESSAGE, intent.getStringExtra(MESSAGE));
         
-        /* Check if fragment exists and replace fragment */
-        FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();        
-        
+        // Replace Conversation Frame by fragment
+        FragmentTransaction transaction = getSupportFragmentManager()
+                .beginTransaction();        
         ConversationFragment fragment = new ConversationFragment();
         fragment.setArguments(args);
-        
         transaction.replace(R.id.conversation, fragment, ConversationFragment.TAG);
         transaction.commit();
     }
