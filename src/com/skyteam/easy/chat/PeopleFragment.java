@@ -6,7 +6,6 @@ import org.jivesoftware.smack.RosterEntry;
 
 import com.skyteam.easy.chat.ChatService.LocalBinder;
 
-import android.app.Activity;
 import android.content.ComponentName;
 import android.content.Intent;
 import android.content.ServiceConnection;
@@ -137,7 +136,8 @@ public class PeopleFragment extends ListFragment {
     }
     
     private class ShowPeopleTask extends AsyncTask<Void, Void, Collection<RosterEntry>> {
-
+        // TODO show progress circle
+        
         @Override
         protected Collection<RosterEntry> doInBackground(Void... params) { 
             for (;;) {
