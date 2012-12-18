@@ -43,9 +43,8 @@ public class ConversationActivity extends FragmentActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.conversation_activity);
         
-        // Get Activity Intent
-        Intent intent = getIntent();
-        String user = intent.getStringExtra(USER);
+        // Get user from Activity Intent
+        String user = getIntent().getStringExtra(USER);
         
         // Check if fragment exists, add or replace fragment to Activity View
         FragmentManager manager = getSupportFragmentManager();

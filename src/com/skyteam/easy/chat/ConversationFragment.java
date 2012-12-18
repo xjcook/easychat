@@ -21,9 +21,10 @@ import android.widget.ListView;
 public class ConversationFragment extends Fragment {
 
     public static final String TAG = "ConversationFragment";
-    public static final String USER = "user";
     public static final String ACTION = "chat.message";
+    public static final String USER = "user";
     public static final String MESSAGE = "message";
+    public static boolean isRunning = false;
     private ArrayList<String> messages = new ArrayList<String>();
     private ConversationAdapter mAdapter;
     
@@ -58,6 +59,18 @@ public class ConversationFragment extends Fragment {
 		listView.setAdapter(mAdapter);
 	}
     
+    @Override
+    public void onStart() {
+        super.onStart();
+        isRunning = true;
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        isRunning = false;
+    }
+
     @Override
     public void onDestroy() {        
         // Unregister receiver

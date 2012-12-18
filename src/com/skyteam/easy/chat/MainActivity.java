@@ -24,8 +24,10 @@ import com.facebook.android.FacebookError;
 import com.facebook.android.AsyncFacebookRunner.RequestListener;
 import com.facebook.android.Facebook.DialogListener;
 import com.skyteam.easy.chat.ChatService.LocalBinder;
+import com.skyteam.easy.chat.PeopleFragment.PeopleFragmentListener;
 
-public class MainActivity extends FragmentActivity {
+public class MainActivity extends FragmentActivity 
+    implements PeopleFragmentListener {
 
     public static final String TAG = "MainActivity";
     public static final String ACTION = "show.people";
@@ -108,6 +110,13 @@ public class MainActivity extends FragmentActivity {
             }
 
             transaction.commit();
+        }
+        
+        // Get user from Activity Intent
+        String user = getIntent().getStringExtra(ConversationFragment.USER);
+        
+        if (user != null) {
+            showConversation(user);
         }
     }
     
@@ -239,6 +248,11 @@ public class MainActivity extends FragmentActivity {
             
         }
     }
+
+    @Override
+    public void onPeopleSelected(String user) {
+        showConversation(user);        
+    }
     
     public void onSendMessageButtonClick(View button) {
         if (mIsBound) {
@@ -250,6 +264,25 @@ public class MainActivity extends FragmentActivity {
         }
     } 
     
+    public void showConversation(String user) {        
+        if (mDualPane) {
+            // Replace MessagesFragment to ConversationFragment
+            ConversationFragment conversationFragment = 
+                    ConversationFragment.newInstance(user); 
+            FragmentTransaction transaction = getSupportFragmentManager()
+                    .beginTransaction();
+            transaction.replace(R.id.messages, conversationFragment, 
+                    ConversationFragment.TAG);
+            transaction.addToBackStack(null);
+            transaction.commit();
+        } else {
+            // Start new ConversationActivity
+            Intent intent = new Intent(this, ConversationActivity.class);
+            intent.putExtra(ConversationActivity.USER, user);
+            startActivity(intent);
+        }
+    }
+
     public void loginToFacebook() {        
         if (! FacebookHelper.sessionRestore(facebook, this)) {
             facebook.authorize(this, FacebookHelper.PERMISSIONS, new DialogListener() {

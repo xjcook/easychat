@@ -11,10 +11,16 @@ import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.packet.Message;
 
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.app.Service;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Binder;
 import android.os.IBinder;
+import android.support.v4.app.NotificationCompat;
+import android.support.v4.app.TaskStackBuilder;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
@@ -41,6 +47,7 @@ public class ChatService extends Service {
                 intent.putExtra(ConversationFragment.MESSAGE, body);
                 LocalBroadcastManager.getInstance(getApplicationContext())
                         .sendBroadcast(intent);
+                createNotification(chat.getParticipant(), body);
             }
         }
         
@@ -148,7 +155,7 @@ public class ChatService extends Service {
         }).start();
     }
     
-    private void listenChat() {
+    public void listenChat() {
         if (xmpp.isConnected()) {
             xmpp.getChatManager().addChatListener(new ChatManagerListener() {
                 
@@ -175,6 +182,23 @@ public class ChatService extends Service {
             // TODO connect and send message
             Log.e(TAG, "sendMessage() is not connected!");
         }
+    }
+    
+    public void createNotification(String user, String message) {
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(this)
+                .setSmallIcon(R.drawable.ic_notification)
+                .setContentTitle(user)
+                .setContentText(message);
+        Intent resultIntent = new Intent(this, MainActivity.class);
+        resultIntent.putExtra(ConversationFragment.USER, user);
+        TaskStackBuilder stackBuilder = TaskStackBuilder.create(this);
+        stackBuilder.addParentStack(MainActivity.class);
+        stackBuilder.addNextIntent(resultIntent);
+        PendingIntent resultPendingIntent = stackBuilder.getPendingIntent(0, 
+                PendingIntent.FLAG_UPDATE_CURRENT);
+        builder.setContentIntent(resultPendingIntent);
+        NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        notificationManager.notify(12345, builder.build());
     }
     
     public boolean isConnected() {

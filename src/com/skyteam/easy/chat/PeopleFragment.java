@@ -4,10 +4,9 @@ import java.util.Collection;
 
 import org.jivesoftware.smack.RosterEntry;
 
-import android.content.Intent;
+import android.app.Activity;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.support.v4.app.FragmentTransaction;
 import android.support.v4.app.ListFragment;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -19,10 +18,26 @@ import android.widget.EditText;
 import android.widget.ListView;
 
 public class PeopleFragment extends ListFragment {
+
+    public interface PeopleFragmentListener {
+        public void onPeopleSelected(String user);
+    }
     
     public static final String TAG = "PeopleFragment";
-    private boolean mDualPane;
+    private PeopleFragmentListener mListener;
     
+    @Override
+    public void onAttach(Activity activity) {
+        super.onAttach(activity);
+        
+        try {
+            mListener = (PeopleFragmentListener) activity;
+        } catch (ClassCastException e) {
+            throw new ClassCastException(activity.toString() + 
+                    " must implement PeopleFragmentListener");
+        }
+    }
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
             Bundle savedInstanceState) {
@@ -32,10 +47,6 @@ public class PeopleFragment extends ListFragment {
     @Override
 	public void onActivityCreated(Bundle savedInstanceState) {
 		super.onActivityCreated(savedInstanceState);
-
-        // Check dualView
-        View messagesFrame = getActivity().findViewById(R.id.messages);
-        mDualPane = messagesFrame != null && messagesFrame.getVisibility() == View.VISIBLE;
         
         // Add TextWatcher Listener
         EditText filterText = (EditText) getView().findViewById(R.id.people_filter_edittext);
@@ -58,7 +69,7 @@ public class PeopleFragment extends ListFragment {
 	public void onListItemClick(ListView l, View v, int position, long id) {
 		super.onListItemClick(l, v, position, id);
 		RosterEntry entry = (RosterEntry) getListAdapter().getItem(position);
-    	showConversation(entry.getUser());
+    	mListener.onPeopleSelected(entry.getUser());
 	}
     
 	public void show(Collection<RosterEntry> entries) {
@@ -69,25 +80,6 @@ public class PeopleFragment extends ListFragment {
     public void clear() {
 		setListAdapter(null);
 	}
-    
-    private void showConversation(String user) {        
-        if (mDualPane) {
-            // Replace MessagesFragment to ConversationFragment
-            ConversationFragment conversationFragment = 
-                    ConversationFragment.newInstance(user); 
-            FragmentTransaction transaction = getActivity()
-                    .getSupportFragmentManager().beginTransaction();
-            transaction.replace(R.id.messages, conversationFragment, 
-                    ConversationFragment.TAG);
-            transaction.addToBackStack(null);
-            transaction.commit();
-        } else {
-            // Start new ConversationActivity
-            Intent intent = new Intent(getActivity(), ConversationActivity.class);
-            intent.putExtra(ConversationActivity.USER, user);
-            startActivity(intent);
-        }
-    }
     
     private class ShowPeopleTask extends AsyncTask<Void, Void, Collection<RosterEntry>> {
 
