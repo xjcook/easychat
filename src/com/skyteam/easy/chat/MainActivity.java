@@ -267,8 +267,10 @@ public class MainActivity extends FragmentActivity
     public void showConversation(String user) {        
         if (mDualPane) {
             // Replace MessagesFragment to ConversationFragment
-            ConversationFragment conversationFragment = 
-                    ConversationFragment.newInstance(user); 
+            Bundle bundle = new Bundle();
+            bundle.putString(ConversationFragment.USER, user);
+            ConversationFragment conversationFragment = new ConversationFragment(); 
+            conversationFragment.setArguments(bundle);
             FragmentTransaction transaction = getSupportFragmentManager()
                     .beginTransaction();
             transaction.replace(R.id.messages, conversationFragment, 

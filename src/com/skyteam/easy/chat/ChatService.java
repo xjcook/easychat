@@ -32,6 +32,7 @@ public class ChatService extends Service {
     private final IBinder mBinder = new LocalBinder();
     private XMPPConnection xmpp;
     private String mAccessToken;
+    
     private MessageListener mMessageListener = new MessageListener() {
         
         @Override
@@ -40,16 +41,22 @@ public class ChatService extends Service {
             
             if (body != null) {
                 Log.v(TAG, "Received message: " + body);
-                Intent intent = new Intent(ConversationFragment.ACTION);
-                intent.putExtra(ConversationFragment.USER, chat.getParticipant());
-                intent.putExtra(ConversationFragment.MESSAGE, body);
-                LocalBroadcastManager.getInstance(getApplicationContext())
-                        .sendBroadcast(intent);
-                createNotification(chat.getParticipant(), body);
+                
+                if (ConversationFragment.isRunning) {
+                    Intent intent = new Intent(ConversationFragment.ACTION);
+                    intent.putExtra(ConversationFragment.USER, chat.getParticipant());
+                    intent.putExtra(ConversationFragment.MESSAGE, body);
+                    LocalBroadcastManager.getInstance(getApplicationContext())
+                            .sendBroadcast(intent);
+                } else {
+                    createNotification(chat.getParticipant(), body);
+                }
             }
         }
         
     };
+    
+    private int mNotifyID = 1;
     
     @Override
     public void onCreate() {  
@@ -183,13 +190,14 @@ public class ChatService extends Service {
     }
     
     public void createNotification(String user, String message) {
-        NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(this)
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(this)
                 .setSmallIcon(R.drawable.ic_notification)
                 .setContentTitle(user)
                 .setContentText(message);
         
         Intent resultIntent = new Intent(this, ConversationActivity.class);
-        resultIntent.putExtra(ConversationActivity.USER, user);
+        resultIntent.putExtra(ConversationFragment.USER, user);
+        resultIntent.putExtra(ConversationFragment.MESSAGE, message);
         
         TaskStackBuilder stackBuilder = TaskStackBuilder.create(this);
         stackBuilder.addParentStack(ConversationActivity.class);
@@ -197,11 +205,11 @@ public class ChatService extends Service {
         
         PendingIntent resultPendingIntent = stackBuilder.getPendingIntent(0, 
                 PendingIntent.FLAG_UPDATE_CURRENT);
-        mBuilder.setContentIntent(resultPendingIntent);
+        builder.setContentIntent(resultPendingIntent);
         
-        NotificationManager mNotificationManager = (NotificationManager) 
+        NotificationManager notificationManager = (NotificationManager) 
                 getSystemService(Context.NOTIFICATION_SERVICE);
-        mNotificationManager.notify(12345, mBuilder.build());
+        notificationManager.notify(mNotifyID++, builder.build());
     }
     
     public boolean isConnected() {

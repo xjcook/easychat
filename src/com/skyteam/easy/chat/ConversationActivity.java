@@ -16,7 +16,8 @@ import android.view.View;
 public class ConversationActivity extends FragmentActivity {
     
     public static final String TAG = "ConversationActivity";
-    public static final String USER = "user";
+    public static final String USER = ConversationFragment.USER;
+    public static final String MESSAGE = ConversationFragment.MESSAGE;
     
     /* Chat Service */
     public boolean mIsBound = false;
@@ -43,8 +44,11 @@ public class ConversationActivity extends FragmentActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.conversation_activity);
         
-        // Get user from Activity Intent
-        String user = getIntent().getStringExtra(USER);
+        // Get user, message from Activity Intent to Bundle arguments
+        Intent intent = getIntent();
+        Bundle bundle = new Bundle();
+        bundle.putString(USER, intent.getStringExtra(USER));
+        bundle.putString(MESSAGE, intent.getStringExtra(MESSAGE));
         
         // Check if fragment exists, add or replace fragment to Activity View
         FragmentManager manager = getSupportFragmentManager();
@@ -54,10 +58,12 @@ public class ConversationActivity extends FragmentActivity {
         
         if (fragment != null) {
             // Replace existing fragment
+            fragment.setArguments(bundle);
             transaction.replace(R.id.conversation, fragment, ConversationFragment.TAG);
         } else {
             // Use Activity Intent to create new Fragment
-            fragment = ConversationFragment.newInstance(user);
+            fragment = new ConversationFragment();
+            fragment.setArguments(bundle);
             // Add new fragment
             transaction.add(R.id.conversation, fragment, ConversationFragment.TAG);
         }

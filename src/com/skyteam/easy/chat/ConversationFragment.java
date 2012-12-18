@@ -57,6 +57,13 @@ public class ConversationFragment extends Fragment {
 		mAdapter = new ConversationAdapter(getActivity(), messages);
 		ListView listView = (ListView) getView().findViewById(R.id.messages_listview);
 		listView.setAdapter(mAdapter);
+		
+		// Check if exists message
+		String message = getArguments().getString(MESSAGE);
+		if (message != null) {
+		    messages.add(message);
+		    mAdapter.notifyDataSetChanged();
+		}
 	}
     
     @Override
@@ -89,6 +96,9 @@ public class ConversationFragment extends Fragment {
         } catch (XMPPException e) {
             Log.e(TAG, Log.getStackTraceString(e));
         }
+        
+        messages.add(message);
+        mAdapter.notifyDataSetChanged();
     }
     
     public void show() {
@@ -98,15 +108,5 @@ public class ConversationFragment extends Fragment {
 	public void clear() {
 		
 	}
-	
-    public static ConversationFragment newInstance(String user) {
-        ConversationFragment conversationFragment = new ConversationFragment();
-        
-        Bundle args = new Bundle();
-        args.putString(USER, user);
-        conversationFragment.setArguments(args);
-        
-        return conversationFragment;
-    }
 
 }
