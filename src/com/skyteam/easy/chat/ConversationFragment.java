@@ -61,14 +61,14 @@ public class ConversationFragment extends Fragment {
 		Bundle args = getArguments();
 		String user = args.getString(USER);
 		
-		// Initialize mChatHistory and get history messages
+		// Initialize mChatHistory and get history of messages
 		mChatHistory = new ChatHistory(getActivity());
 		Cursor cursor = mChatHistory.getMessages(user);
 		
 		if (cursor.moveToFirst()) {
 		    while (! cursor.isAfterLast()) {
 		        String message = cursor.getString(cursor.getColumnIndex(
-		                                            ChatHistory.COLUMN_MESSAGE));
+		                                          ChatHistory.COLUMN_MESSAGE));
 		        messages.add(message);
 		        cursor.moveToNext();
 		    }
@@ -85,8 +85,8 @@ public class ConversationFragment extends Fragment {
 		listView.setAdapter(mAdapter);
 		
 		// Check if exists message
-		
 		String message = args.getString(MESSAGE);
+		
 		if (message != null) {
 		    messages.add(message);
 		    mAdapter.notifyDataSetChanged();
