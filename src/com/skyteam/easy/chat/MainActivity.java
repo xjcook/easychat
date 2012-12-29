@@ -115,23 +115,20 @@ public class MainActivity extends FragmentActivity {
             // Log In to Facebook and start ChatService
             loginToFacebook();
             new StartChatServiceTask().execute();
-            
-            // TODO Replace fragments
-            /*if (mDualPane) {
-                PeopleFragment peopleFragment = new PeopleFragment();
-                MessagesFragment messagesFragment = new MessagesFragment();
+
+            // Replace fragments
+            if (mDualPane) {
+                // Replace Messages Frame by fragment
                 FragmentTransaction transaction = getSupportFragmentManager()
                         .beginTransaction();
-                transaction.replace(R.id.people, peopleFragment);
+                MessagesFragment messagesFragment = new MessagesFragment();
                 transaction.replace(R.id.messages, messagesFragment, MessagesFragment.TAG);
                 transaction.commit();
+                
+                // TODO replace people #1
             } else {
-                PeopleFragment peopleFragment = new PeopleFragment();
-                FragmentTransaction transaction = getSupportFragmentManager()
-                        .beginTransaction();
-                transaction.replace(R.id.people, peopleFragment);
-                transaction.commit();
-            }*/
+                // TODO replace people #2
+            }
             
             return true;
             
